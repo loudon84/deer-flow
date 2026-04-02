@@ -1,0 +1,45 @@
+---
+description: DeerFlow backend — sandbox, tools, subagents, MCP, skills, memory, channels, embedded client (from CLAUDE.md)
+globs: backend/**
+alwaysApply: false
+---
+
+# Sandbox (`deerflow/sandbox/`)
+
+Abstract `Sandbox`: `execute_command`, `read_file`, `write_file`, `list_dir`. Providers: local singleton, `AioSandboxProvider` (Docker). Agent paths: `/mnt/user-data/{workspace,uploads,outputs}`, `/mnt/skills` → `backend/.deer-flow/threads/{id}/user-data/...`, repo `skills/`. Tools: `bash`, `ls`, `read_file`, `write_file`, `str_replace`.
+
+# Subagents
+
+Built-ins: `general-purpose`, `bash`. `task` tool → executor, dual pools (3+3 workers), `MAX_CONCURRENT_SUBAGENTS = 3`, 15m timeout; events `task_started` / `task_running` / completed|failed|timed_out.
+
+# Tools
+
+`get_available_tools(...)`: config tools, MCP, builtins (`present_files`, `ask_clarification`, `view_image` if vision), `task` if subagents on. Community: tavily, jina_ai, firecrawl, image_search, aio_sandbox. ACP: real adapters only; `/mnt/acp-workspace/` read-only per thread.
+
+# MCP (`deerflow/mcp/`)
+
+`MultiServerMCPClient`; lazy `get_cached_mcp_tools()`, mtime invalidation; stdio/SSE/HTTP; OAuth refresh for HTTP/SSE. Gateway writes → LangGraph picks up via mtime.
+
+# Skills
+
+`skills/{public,custom}/`, `SKILL.md` + frontmatter; `load_skills()`; enabled state in `extensions_config.json`; install via Gateway POST.
+
+# Models
+
+`create_chat_model(name, thinking_enabled)` in `models/factory.py`; `supports_vision`; `$` env resolution.
+
+# Channels (`app/channels/`)
+
+LangGraph via `langgraph-sdk`; `MessageBus`, `store`, `manager` (Feishu `runs.stream`, Slack/Telegram `runs.wait`). Docker: use `http://langgraph:2024` / `http://gateway:8001` or `DEER_FLOW_CHANNELS_*_URL`.
+
+# Memory (`agents/memory/`)
+
+Middleware → debounced queue → LLM updater → `memory.json`; injection into system prompt. Tests: `tests/test_memory_updater.py`.
+
+# Reflection
+
+`resolve_variable`, `resolve_class` for config `use` paths.
+
+# `DeerFlowClient` (`deerflow/client.py`)
+
+In-process parity with Gateway response shapes; `TestGatewayConformance` in `tests/test_client.py`. Thread cleanup route is Gateway-only (no client twin yet). `update_mcp_config` / `update_skill` invalidate cached agent.

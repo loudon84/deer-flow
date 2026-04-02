@@ -1,0 +1,30 @@
+---
+description: DeerFlow backend — config.yaml, extensions_config.json, Gateway API, nginx (from CLAUDE.md)
+globs: backend/app/gateway/**/*
+alwaysApply: false
+---
+
+# Configuration
+
+**`config.yaml`** (copy from `config.example.yaml` at **repo root**): `config_version` for drift warnings; `make config-upgrade` merges missing keys. **`get_app_config()`** caches and reloads on path change or file mtime.
+
+**Resolution order**: explicit `config_path` → `DEER_FLOW_CONFIG_PATH` → `backend/config.yaml` → **parent (repo root) `config.yaml` (recommended)**. Values starting with `$` → env vars.
+
+**`extensions_config.json`**: MCP + skills; order: explicit path → `DEER_FLOW_EXTENSIONS_CONFIG_PATH` → `backend/` → **repo root (recommended)**.
+
+# Gateway (`app/gateway/`, port **8001**)
+
+Health: `GET /health`. Nginx: `/api/langgraph/*` → LangGraph; other `/api/*` → Gateway.
+
+| Area | Prefix | Notes |
+|------|--------|--------|
+| Models | `/api/models` | list / `{name}` |
+| MCP | `/api/mcp` | GET/PUT config → `extensions_config.json` |
+| Skills | `/api/skills` | list, install `.skill` ZIP |
+| Memory | `/api/memory` | data, reload, config, status |
+| Uploads | `/api/threads/{id}/uploads` | POST upload, list, DELETE file |
+| Threads | `/api/threads/{id}` | DELETE local thread data after LangGraph delete |
+| Artifacts | `/api/threads/{id}/artifacts` | GET path; HTML/SVG/xhtml forced attachment for XSS safety |
+| Suggestions | `/api/threads/{id}/suggestions` | POST follow-ups |
+
+**Full stack from root**: `make dev` → app at `http://localhost:2026`. **Backend only**: `make dev` + `make gateway` → 2024 / 8001 direct.

@@ -5,9 +5,11 @@ import {
   EyeIcon,
   LoaderIcon,
   PackageIcon,
+  PencilIcon,
   SquareArrowOutUpRightIcon,
   XIcon,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
@@ -43,6 +45,14 @@ import { useThread } from "../messages/context";
 import { Tooltip } from "../tooltip";
 
 import { useArtifacts } from "./context";
+
+const BlockNoteEditorDynamic = dynamic(
+  () =>
+    import("@/components/ai-elements/blocknote-editor").then((mod) => ({
+      default: mod.BlockNoteEditor,
+    })),
+  { ssr: false },
+);
 
 export function ArtifactFileDetail({
   className,
@@ -91,7 +101,15 @@ export function ArtifactFileDetail({
 
   const displayContent = content ?? "";
 
-  const [viewMode, setViewMode] = useState<"code" | "preview">("code");
+  const [viewMode, setViewMode] = useState<"code" | "preview" | "edit">(
+    "code",
+  );
+  const displayViewMode = useMemo(() => {
+    if (language === "html" && viewMode === "edit") {
+      return "preview";
+    }
+    return viewMode;
+  }, [language, viewMode]);
   const [isInstalling, setIsInstalling] = useState(false);
   const { isMock } = useThread();
   useEffect(() => {
@@ -100,7 +118,7 @@ export function ArtifactFileDetail({
     } else {
       setViewMode("code");
     }
-  }, [isSupportPreview]);
+  }, [isSupportPreview, filepathFromProps]);
 
   const handleInstallSkill = useCallback(async () => {
     if (isInstalling) return;
@@ -155,19 +173,29 @@ export function ArtifactFileDetail({
               type="single"
               variant="outline"
               size="sm"
-              value={viewMode}
+              value={displayViewMode}
               onValueChange={(value) => {
-                if (value) {
+                if (!value) {
+                  return;
+                }
+                if (language === "html") {
                   setViewMode(value as "code" | "preview");
+                } else {
+                  setViewMode(value as "code" | "preview" | "edit");
                 }
               }}
             >
-              <ToggleGroupItem value="code">
+              <ToggleGroupItem title={t.common.code} value="code">
                 <Code2Icon />
               </ToggleGroupItem>
-              <ToggleGroupItem value="preview">
+              <ToggleGroupItem title={t.common.preview} value="preview">
                 <EyeIcon />
               </ToggleGroupItem>
+              {language === "markdown" && (
+                <ToggleGroupItem title={t.common.edit} value="edit">
+                  <PencilIcon />
+                </ToggleGroupItem>
+              )}
             </ToggleGroup>
           )}
         </div>
@@ -236,7 +264,7 @@ export function ArtifactFileDetail({
       </ArtifactHeader>
       <ArtifactContent className="p-0">
         {isSupportPreview &&
-          viewMode === "preview" &&
+          displayViewMode === "preview" &&
           (language === "markdown" || language === "html") && (
             <ArtifactFilePreview
               content={displayContent}
@@ -245,13 +273,23 @@ export function ArtifactFileDetail({
               url={url}
             />
           )}
-        {isCodeFile && viewMode === "code" && (
+        {isCodeFile && displayViewMode === "code" && (
           <CodeEditor
             className="size-full resize-none rounded-none border-none"
             value={displayContent ?? ""}
             readonly
           />
         )}
+        {isCodeFile &&
+          language === "markdown" &&
+          displayViewMode === "edit" && (
+            <BlockNoteEditorDynamic
+              key={filepathFromProps}
+              className="size-full min-h-0"
+              editable={!isWriteFile}
+              markdown={displayContent ?? ""}
+            />
+          )}
         {!isCodeFile && (
           <iframe
             className="size-full"

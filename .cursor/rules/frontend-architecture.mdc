@@ -1,0 +1,39 @@
+---
+description: DeerFlow frontend — architecture, src layout, data flow, patterns (from CLAUDE.md)
+globs: frontend/**
+alwaysApply: false
+---
+
+# DeerFlow frontend — architecture
+
+```
+Frontend (Next.js) ──▶ LangGraph SDK ──▶ LangGraph Backend (lead_agent)
+                                              ├── Sub-Agents
+                                              └── Tools & Skills
+```
+
+Stateful chat: **threads**, streamed AI responses, **artifacts**, **todos**.
+
+## Source layout (`src/`)
+
+- **`app/`** — App Router. Routes include `/` (landing), `/workspace/chats/[thread_id]` (chat).
+- **`components/`**
+  - `ui/` — Shadcn primitives (auto-generated, ESLint-ignored)
+  - `ai-elements/` — Vercel AI SDK elements (auto-generated, ESLint-ignored)
+  - `workspace/` — Chat (messages, artifacts, settings)
+  - `landing/` — Landing sections
+- **`core/`** — Business logic: `threads/`, `api/`, `artifacts/`, `i18n/`, `settings/`, `memory/`, `skills/`, `messages/`, `mcp/`, `models/`
+- **`hooks/`**, **`lib/`** (`cn()`), **`server/`** (better-auth, not fully active), **`styles/`** — Tailwind v4 + CSS variables
+
+## Data flow
+
+1. User input → `core/threads/hooks.ts` → LangGraph SDK streaming
+2. Stream events → thread state (messages, artifacts, todos)
+3. TanStack Query + localStorage (settings)
+4. Components subscribe and re-render
+
+## Key patterns
+
+- Server Components by default; `"use client"` only for interactive pieces.
+- Thread hooks (`useThreadStream`, `useSubmitThread`, `useThreads`) are the main API surface.
+- LangGraph client: singleton via `getAPIClient()` in `core/api/`.

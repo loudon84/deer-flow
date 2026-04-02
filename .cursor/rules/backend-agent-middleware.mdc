@@ -1,0 +1,33 @@
+---
+description: DeerFlow backend — lead agent, ThreadState, middleware chain order (from CLAUDE.md)
+globs: backend/packages/harness/deerflow/agents/**/*
+alwaysApply: false
+---
+
+# Lead agent and middleware
+
+- **Entry**: `make_lead_agent(config)` in `packages/harness/deerflow/agents/lead_agent/agent.py`, registered in `langgraph.json`.
+- **Models/tools**: `create_chat_model()`, `get_available_tools()`, prompt via `apply_prompt_template()` (skills, memory, subagents).
+
+**ThreadState** (`agents/thread_state.py`): extends agent state with `sandbox`, `thread_data`, `title`, `artifacts`, `todos`, `uploaded_files`, `viewed_images`; reducers `merge_artifacts`, `merge_viewed_images`.
+
+**Runtime `config.configurable`**: `thinking_enabled`, `model_name`, `is_plan_mode`, `subagent_enabled`.
+
+## Middleware order (do not reorder casually)
+
+In `lead_agent/agent.py`:
+
+1. ThreadDataMiddleware  
+2. UploadsMiddleware  
+3. SandboxMiddleware  
+4. DanglingToolCallMiddleware  
+5. GuardrailMiddleware (optional)  
+6. SummarizationMiddleware (optional)  
+7. TodoListMiddleware (plan mode)  
+8. TitleMiddleware  
+9. MemoryMiddleware  
+10. ViewImageMiddleware  
+11. SubagentLimitMiddleware (optional)  
+12. ClarificationMiddleware (**must be last**)
+
+Guardrails: see `backend/docs/GUARDRAILS.md`.

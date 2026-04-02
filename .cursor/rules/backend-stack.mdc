@@ -1,0 +1,39 @@
+---
+description: DeerFlow backend — services, Make commands, docs policy, TDD, style (from CLAUDE.md)
+globs: backend/**
+alwaysApply: false
+---
+
+# DeerFlow backend — stack and workflow
+
+LangGraph super-agent backend: sandbox, memory, subagents, MCP/skills, per-thread isolation.
+
+**Services (typical ports)**:
+- LangGraph Server: **2024**
+- Gateway API (FastAPI): **8001**
+- Frontend: **3000**; Nginx entry: **2026**
+- Provisioner: **8002** (optional, Docker/K8s sandbox)
+
+**Repo layout (under `backend/`)**: `packages/harness/deerflow/` (`deerflow.*`), `app/` (`app.*` — gateway + channels), `tests/`, `docs/`. Root: `config.yaml`, `extensions_config.json`, `skills/`.
+
+## Documentation policy (CRITICAL)
+
+After code changes: update **user-facing** `README.md` and **dev** `CLAUDE.md` (and related docs) so they stay accurate.
+
+## Commands
+
+**Repository root**: `make check`, `make install`, `make dev`, `make stop`.
+
+**`backend/` only**: `make install`, `make dev` (LangGraph), `make gateway`, `make test`, `make lint`, `make format`.
+
+**Focused tests**: `tests/test_docker_sandbox_mode_detection.py`, `tests/test_provisioner_kubeconfig.py`, `tests/test_harness_boundary.py` (no `deerflow` → `app.*` imports). CI: `.github/workflows/backend-unit-tests.yml`.
+
+## TDD (mandatory)
+
+New features and bug fixes **must** include unit tests under `backend/tests/` (`test_<feature>.py`). Run `make test` before considering work complete. Single file: `PYTHONPATH=. uv run pytest tests/test_<feature>.py -v`.
+
+## Code style
+
+`ruff` lint + format, line length **240**, Python **3.12+**, type hints, double quotes, spaces.
+
+**More detail**: `backend/docs/` — CONFIGURATION, ARCHITECTURE, API, SETUP, FILE_UPLOAD, PATH_EXAMPLES, summarization, plan_mode_usage, GUARDRAILS.

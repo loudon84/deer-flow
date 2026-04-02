@@ -1,0 +1,37 @@
+---
+description: DeerFlow frontend — stack, pnpm commands, environment (from CLAUDE.md)
+globs: frontend/**
+alwaysApply: false
+---
+
+# DeerFlow frontend — stack and commands
+
+Next.js 16 UI for a LangGraph-based agent system: threads, streaming, artifacts, skills/tools.
+
+**Stack**: Next.js 16, React 19, TypeScript 5.8, Tailwind CSS 4, pnpm 10.26.2
+
+## Commands
+
+| Command | Purpose |
+|--------|---------|
+| `pnpm dev` | Dev server with Turbopack (http://localhost:3000) |
+| `pnpm build` | Production build |
+| `pnpm check` | Lint + type check (run before committing) |
+| `pnpm lint` | ESLint only |
+| `pnpm lint:fix` | ESLint with auto-fix |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm start` | Production server |
+
+No test framework is configured.
+
+## Environment
+
+Optional backend URLs (nginx proxy by default):
+
+```
+NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:8001
+NEXT_PUBLIC_LANGGRAPH_BASE_URL=http://localhost:2024
+```
+
+- Env validation: `@t3-oss/env-nextjs` + Zod in `src/env.js`. Skip with `SKIP_ENV_VALIDATION=1`.
+- Requires Node.js 22+ and pnpm 10.26.2+.

@@ -1,0 +1,27 @@
+---
+description: DeerFlow backend — harness vs app layers, import firewall (from CLAUDE.md)
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Harness / App split
+
+- **Harness** — `backend/packages/harness/deerflow/`, package `deerflow-harness`, imports **`deerflow.*`**: agents, tools, sandbox, models, MCP, skills, config, etc.
+- **App** — `backend/app/`, imports **`app.*`**: FastAPI Gateway (`app/gateway/`), IM channels (`app/channels/`).
+
+**Rule**: App may import `deerflow`; **`deerflow` must never import `app`** — enforced by `tests/test_harness_boundary.py` in CI.
+
+```python
+# Harness
+from deerflow.agents import make_lead_agent
+from deerflow.models import create_chat_model
+
+# App
+from app.gateway.app import app
+
+# Allowed
+from deerflow.config import get_app_config
+
+# FORBIDDEN in harness
+# from app.gateway.routers.uploads import ...
+```
