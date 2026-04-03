@@ -1,0 +1,38 @@
+/* 标题相对 BlockNote 默认缩小 30%（×0.75），与 core Block.css 中各级 em 一致 */
+.blocknote-editor-root [data-content-type="heading"] {
+  --level: calc(3em * 0.75);
+}
+.blocknote-editor-root [data-content-type="heading"][data-level="2"] {
+  --level: calc(2em * 0.75);
+}
+.blocknote-editor-root [data-content-type="heading"][data-level="3"] {
+  --level: calc(1.3em * 0.75);
+}
+.blocknote-editor-root [data-content-type="heading"][data-level="4"] {
+  --level: calc(1em * 0.75);
+}
+.blocknote-editor-root [data-content-type="heading"][data-level="5"] {
+  --level: calc(0.9em * 0.75);
+}
+.blocknote-editor-root [data-content-type="heading"][data-level="6"] {
+  --level: calc(0.8em * 0.75);
+}
+
+.blocknote-editor-root [data-prev-level="1"] {
+  --prev-level: calc(3em * 0.75);
+}
+.blocknote-editor-root [data-prev-level="2"] {
+  --prev-level: calc(2em * 0.75);
+}
+.blocknote-editor-root [data-prev-level="3"] {
+  --prev-level: calc(1.3em * 0.75);
+}
+.blocknote-editor-root [data-prev-level="4"] {
+  --prev-level: calc(1em * 0.75);
+}
+.blocknote-editor-root [data-prev-level="5"] {
+  --prev-level: calc(0.9em * 0.75);
+}
+.blocknote-editor-root [data-prev-level="6"] {
+  --prev-level: calc(0.8em * 0.75);
+}

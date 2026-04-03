@@ -41,6 +41,7 @@ export const enUS: Translations = {
     code: "Code",
     preview: "Preview",
     cancel: "Cancel",
+    back: "Back",
     save: "Save",
     install: "Install",
     create: "Create",

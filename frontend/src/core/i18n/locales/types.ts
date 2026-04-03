@@ -30,6 +30,7 @@ export interface Translations {
     code: string;
     preview: string;
     cancel: string;
+    back: string;
     save: string;
     install: string;
     create: string;

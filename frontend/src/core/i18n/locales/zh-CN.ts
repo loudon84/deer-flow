@@ -1,4 +1,4 @@
-﻿import {
+import {
   CompassIcon,
   GraduationCapIcon,
   ImageIcon,
@@ -41,6 +41,7 @@ export const zhCN: Translations = {
     code: "代码",
     preview: "预览",
     cancel: "取消",
+    back: "返回",
     save: "保存",
     install: "安装",
     create: "创建",
