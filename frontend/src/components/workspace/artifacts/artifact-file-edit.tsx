@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, UploadIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useLayoutEffect, useMemo, useState } from "react";
@@ -15,6 +15,7 @@ import { useContext } from "react";
 import { ThreadContext } from "../messages/context";
 import { getAPIClient } from "@/core/api";
 import type { AgentThreadState } from "@/core/threads/types";
+import { PublishDialog } from "@/components/publish/publish-dialog";
 
 // 安全地获取 thread context，如果不在 provider 内部则返回 undefined
 function useThreadSafe() {
@@ -126,6 +127,7 @@ export function ArtifactFileEdit({
   const { t } = useI18n();
   const threadContext = useThreadSafe();
   const [snapshotMarkdown, setSnapshotMarkdown] = useState<string | null>(null);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
 
   const isWriteFile = useMemo(
     () => filepath.startsWith("write-file:"),
@@ -231,6 +233,17 @@ export function ArtifactFileEdit({
           {getFileName(decodedPath)}
         </h1>
         <span className="text-muted-foreground ml-auto text-xs">{t.common.edit}</span>
+        {isMarkdown && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground text-xs"
+            onClick={() => setPublishDialogOpen(true)}
+          >
+            <UploadIcon className="mr-1 h-3 w-3" />
+            {t.common.publish}
+          </Button>
+        )}
       </header>
       <main className="flex min-h-0 flex-1 flex-col p-4 pt-2">
         {!isMarkdown ? (
@@ -255,6 +268,14 @@ export function ArtifactFileEdit({
           />
         )}
       </main>
+
+      {/* 发布对话框 */}
+      <PublishDialog
+        open={publishDialogOpen}
+        onOpenChange={setPublishDialogOpen}
+        markdown={markdown}
+        title={getFileName(decodedPath)}
+      />
     </div>
   );
 }

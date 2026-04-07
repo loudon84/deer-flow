@@ -267,6 +267,7 @@ export function ArtifactFileDetail({
                   stashArtifactMarkdownForEdit({
                     threadId,
                     filepath: filepathFromProps,
+                    decodedPath: normalizedDecodedPath,
                     markdown: displayContent ?? "",
                   });
 

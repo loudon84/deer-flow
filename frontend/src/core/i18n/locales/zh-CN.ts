@@ -50,6 +50,7 @@ export const zhCN: Translations = {
     exportAsMarkdown: "导出为 Markdown",
     exportAsJSON: "导出为 JSON",
     exportSuccess: "对话已导出",
+    publish: "发布",
   },
 
   // Welcome
@@ -294,6 +295,7 @@ export const zhCN: Translations = {
       tools: "工具",
       skills: "技能",
       notification: "通知",
+      publish: "内容发布",
       about: "关于",
     },
     memory: {

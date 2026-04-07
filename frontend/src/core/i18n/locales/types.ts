@@ -31,6 +31,7 @@ export interface Translations {
     preview: string;
     cancel: string;
     back: string;
+    publish: string;
     save: string;
     install: string;
     create: string;
@@ -245,6 +246,7 @@ export interface Translations {
       skills: string;
       notification: string;
       about: string;
+      publish: string;
     };
     memory: {
       title: string;

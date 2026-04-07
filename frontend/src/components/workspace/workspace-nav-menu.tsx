@@ -29,6 +29,7 @@ import { useI18n } from "@/core/i18n/hooks";
 
 import { GithubIcon } from "./github-icon";
 import { SettingsDialog } from "./settings";
+import { useSettings } from "./settings/settings-context";
 
 function NavMenuButtonContent({
   isSidebarOpen,
@@ -51,10 +52,7 @@ function NavMenuButtonContent({
 }
 
 export function WorkspaceNavMenu() {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsDefaultSection, setSettingsDefaultSection] = useState<
-    "appearance" | "memory" | "tools" | "skills" | "notification" | "about"
-  >("appearance");
+  const { open: settingsOpen, defaultSection, openSettings, closeSettings } = useSettings();
   const [mounted, setMounted] = useState(false);
   const { open: isSidebarOpen } = useSidebar();
   const { t } = useI18n();
@@ -67,8 +65,12 @@ export function WorkspaceNavMenu() {
     <>
       <SettingsDialog
         open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        defaultSection={settingsDefaultSection}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeSettings();
+          }
+        }}
+        defaultSection={defaultSection}
       />
       <SidebarMenu className="w-full">
         <SidebarMenuItem>
@@ -90,8 +92,7 @@ export function WorkspaceNavMenu() {
                 <DropdownMenuGroup>
                   <DropdownMenuItem
                     onClick={() => {
-                      setSettingsDefaultSection("appearance");
-                      setSettingsOpen(true);
+                      openSettings("appearance");
                     }}
                   >
                     <Settings2Icon />
@@ -139,8 +140,7 @@ export function WorkspaceNavMenu() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    setSettingsDefaultSection("about");
-                    setSettingsOpen(true);
+                    openSettings("about");
                   }}
                 >
                   <InfoIcon />

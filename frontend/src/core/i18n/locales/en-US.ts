@@ -50,6 +50,7 @@ export const enUS: Translations = {
     exportAsMarkdown: "Export as Markdown",
     exportAsJSON: "Export as JSON",
     exportSuccess: "Conversation exported",
+    publish: "Publish",
   },
 
   // Welcome
@@ -309,6 +310,7 @@ export const enUS: Translations = {
       tools: "Tools",
       skills: "Skills",
       notification: "Notification",
+      publish: "Article Publish",
       about: "About",
     },
     memory: {
