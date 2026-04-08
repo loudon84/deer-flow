@@ -1,0 +1,4 @@
+# 模板状态常量
+TEMPLATE_STATUS_ACTIVE = "active"
+TEMPLATE_STATUS_INACTIVE = "inactive"
+TEMPLATE_STATUS_ARCHIVED = "archived"

@@ -1,0 +1,26 @@
+# Article Studio 依赖包
+
+# Web 框架
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# 数据验证
+pydantic>=2.0.0
+
+# MongoDB
+motor>=3.3.0
+
+# HTTP 客户端
+httpx>=0.25.0
+
+# 模板引擎
+jinja2>=3.1.0
+
+# 配置文件
+pyyaml>=6.0
+
+# JSON Schema 验证
+jsonschema>=4.20.0
+
+# 其他工具
+python-multipart>=0.0.6

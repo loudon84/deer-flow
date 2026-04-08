@@ -1,0 +1,28 @@
+# Article Studio 模型配置文件
+
+models:
+  gpt-4:
+    name: GPT-4
+    model_id: gpt-4
+    api_url: https://api.openai.com/v1/chat/completions
+    api_key: ${OPENAI_API_KEY}
+    max_tokens: 4000
+    temperature: 0.7
+
+  gpt-3.5-turbo:
+    name: GPT-3.5 Turbo
+    model_id: gpt-3.5-turbo
+    api_url: https://api.openai.com/v1/chat/completions
+    api_key: ${OPENAI_API_KEY}
+    max_tokens: 2000
+    temperature: 0.7
+
+  claude-3-opus:
+    name: Claude 3 Opus
+    model_id: claude-3-opus-20240229
+    api_url: https://api.anthropic.com/v1/messages
+    api_key: ${ANTHROPIC_API_KEY}
+    max_tokens: 4000
+    temperature: 0.7
+
+default_model: gpt-3.5-turbo
