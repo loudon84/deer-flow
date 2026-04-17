@@ -1,15 +1,13 @@
 import {
-  Code2Icon,
   CopyIcon,
   DownloadIcon,
-  EyeIcon,
   LoaderIcon,
   PackageIcon,
   PencilIcon,
   SquareArrowOutUpRightIcon,
   XIcon,
 } from "lucide-react";
-import dynamic from "next/dynamic";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
@@ -29,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CodeEditor } from "@/components/workspace/code-editor";
 import { useArtifactContent } from "@/core/artifacts/hooks";
 import { urlOfArtifact } from "@/core/artifacts/utils";
@@ -44,15 +41,11 @@ import { ArtifactLink } from "../citations/artifact-link";
 import { useThread } from "../messages/context";
 import { Tooltip } from "../tooltip";
 
+import {
+  buildArtifactMarkdownEditHref,
+  stashArtifactMarkdownForEdit,
+} from "./artifact-file-edit";
 import { useArtifacts } from "./context";
-
-const BlockNoteEditorDynamic = dynamic(
-  () =>
-    import("@/components/ai-elements/blocknote-editor").then((mod) => ({
-      default: mod.BlockNoteEditor,
-    })),
-  { ssr: false },
-);
 
 export function ArtifactFileDetail({
   className,
@@ -64,6 +57,8 @@ export function ArtifactFileDetail({
   threadId: string;
 }) {
   const { t } = useI18n();
+  const router = useRouter();
+  const pathname = usePathname();
   const { artifacts, setOpen, select } = useArtifacts();
   const isWriteFile = useMemo(() => {
     return filepathFromProps.startsWith("write-file:");
@@ -75,6 +70,18 @@ export function ArtifactFileDetail({
     }
     return filepathFromProps;
   }, [filepathFromProps, isWriteFile]);
+
+  const normalizedDecodedPath = useMemo(() => {
+    if (isWriteFile) {
+      // already decoded by url.pathname + decodeURIComponent
+      return filepath;
+    }
+    try {
+      return decodeURIComponent(filepath);
+    } catch {
+      return filepath;
+    }
+  }, [filepath, isWriteFile]);
   const isSkillFile = useMemo(() => {
     return filepath.endsWith(".skill");
   }, [filepath]);
@@ -166,7 +173,8 @@ export function ArtifactFileDetail({
             )}
           </ArtifactTitle>
         </div>
-        <div className="flex min-w-0 grow items-center justify-center">
+        {/*
+        <div className="flex min-w-0 grow items-center justify-center">          
           {isSupportPreview && (
             <ToggleGroup
               className="mx-auto"
@@ -180,25 +188,22 @@ export function ArtifactFileDetail({
                 }
                 if (language === "html") {
                   setViewMode(value as "code" | "preview");
-                } else {
-                  setViewMode(value as "code" | "preview" | "edit");
+                  return;
                 }
+                
+                setViewMode(value as "code" | "preview" | "edit");
               }}
             >
               <ToggleGroupItem title={t.common.code} value="code">
-                <Code2Icon />
+                <CodeIcon />
               </ToggleGroupItem>
               <ToggleGroupItem title={t.common.preview} value="preview">
                 <EyeIcon />
-              </ToggleGroupItem>
-              {language === "markdown" && (
-                <ToggleGroupItem title={t.common.edit} value="edit">
-                  <PencilIcon />
-                </ToggleGroupItem>
-              )}
+              </ToggleGroupItem>              
             </ToggleGroup>
           )}
         </div>
+        */}
         <div className="flex items-center gap-2">
           <ArtifactActions>
             {!isWriteFile && filepath.endsWith(".skill") && (
@@ -258,6 +263,29 @@ export function ArtifactFileDetail({
                 />
               </a>
             )}
+            {language === "markdown" && (
+              <ArtifactAction
+                icon={PencilIcon}
+                label={t.common.edit}
+                tooltip={t.common.edit}
+                onClick={() => {
+                  stashArtifactMarkdownForEdit({
+                    threadId,
+                    filepath: filepathFromProps,
+                    markdown: displayContent ?? "",
+                  });
+
+                  router.push(
+                    buildArtifactMarkdownEditHref(
+                      threadId,
+                      filepathFromProps,
+                      pathname,
+                      isMock,
+                    ),
+                  );
+                }}
+              />
+            )}
             <ArtifactAction
               icon={XIcon}
               label={t.common.close}
@@ -285,16 +313,6 @@ export function ArtifactFileDetail({
             readonly
           />
         )}
-        {isCodeFile &&
-          language === "markdown" &&
-          displayViewMode === "edit" && (
-            <BlockNoteEditorDynamic
-              key={filepathFromProps}
-              className="size-full min-h-0"
-              editable={!isWriteFile}
-              markdown={displayContent ?? ""}
-            />
-          )}
         {!isCodeFile && (
           <iframe
             className="size-full"
