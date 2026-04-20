@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTemplates, useTemplate, useCreateJob } from "@/core/studio";
+import { useTemplates, useTemplate, useTemplateVersions, useCreateJob } from "@/core/studio";
 import { toast } from "sonner";
 
 export function ArticleCreateForm() {
@@ -41,6 +41,10 @@ export function ArticleCreateForm() {
   const [inputData, setInputData] = useState("{}");
 
   const { data: selectedTemplate } = useTemplate(selectedTemplateId);
+  const { data: templateVersions } = useTemplateVersions(selectedTemplateId);
+
+  // Get the latest version (first in the list)
+  const latestVersion = templateVersions?.[0];
 
   // Initialize form when template is selected
   useEffect(() => {
@@ -49,6 +53,14 @@ export function ArticleCreateForm() {
       setGenerationMode(selectedTemplate.default_generation_mode);
     }
   }, [selectedTemplate]);
+
+  // Load prompts from latest version when available
+  useEffect(() => {
+    if (latestVersion) {
+      setSystemPromptOverride(latestVersion.system_prompt || "");
+      setUserPromptOverride(latestVersion.user_prompt_template || "");
+    }
+  }, [latestVersion]);
 
   const handleCreate = async () => {
     if (!selectedTemplateId) {
@@ -154,9 +166,14 @@ export function ArticleCreateForm() {
               <Textarea
                 value={systemPromptOverride}
                 onChange={(e) => setSystemPromptOverride(e.target.value)}
-                placeholder="Override the default system prompt"
+                placeholder={latestVersion?.system_prompt || "Override the default system prompt"}
                 rows={3}
               />
+              {latestVersion?.system_prompt && (
+                <p className="text-muted-foreground text-xs mt-1">
+                  Default from template version {latestVersion.version}
+                </p>
+              )}
             </div>
 
             <div>
@@ -166,9 +183,15 @@ export function ArticleCreateForm() {
               <Textarea
                 value={userPromptOverride}
                 onChange={(e) => setUserPromptOverride(e.target.value)}
-                placeholder="Override the default user prompt template"
+                placeholder={latestVersion?.user_prompt_template || "Override the default user prompt template"}
                 rows={3}
+                className="font-mono text-sm"
               />
+              {latestVersion?.user_prompt_template && (
+                <p className="text-muted-foreground text-xs mt-1">
+                  Default from template version {latestVersion.version}
+                </p>
+              )}
             </div>
           </>
         )}

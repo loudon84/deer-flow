@@ -25,21 +25,26 @@ export default async function TemplateVersionsPage({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="flex size-full flex-col">
+      {/* Page header */}
+      <div className="flex items-center gap-4 border-b px-6 py-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/workspace/studio/templates/${templateId}`}>
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Template Versions</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl font-semibold">Template Versions</h1>
+          <p className="text-muted-foreground mt-0.5 text-sm">
             View all versions of this template
           </p>
         </div>
       </div>
-      <TemplateVersionList templateId={templateId} />
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <TemplateVersionList templateId={templateId} />
+      </div>
     </div>
   );
 }

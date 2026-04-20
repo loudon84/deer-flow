@@ -300,6 +300,7 @@ export function ArtifactFileDetail({
               isWriteFile={isWriteFile}
               language={language ?? "text"}
               url={url}
+              threadId={threadId}
             />
           )}
         {isCodeFile && displayViewMode === "code" && (
@@ -325,19 +326,24 @@ export function ArtifactFilePreview({
   isWriteFile,
   language,
   url,
+  threadId,
 }: {
   content: string;
   isWriteFile: boolean;
   language: string;
   url?: string;
+  threadId?: string;
 }) {
   if (language === "markdown") {
+    // 创建一个包装组件来传递threadId
+    const LinkComponent = (props: any) => <ArtifactLink {...props} threadId={threadId} />;
+    
     return (
       <div className="size-full px-4">
         <Streamdown
           className="size-full"
           {...streamdownPlugins}
-          components={{ a: ArtifactLink }}
+          components={{ a: LinkComponent }}
         >
           {content ?? ""}
         </Streamdown>

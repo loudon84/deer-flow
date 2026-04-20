@@ -7,6 +7,15 @@ dev:
 gateway:
 	PYTHONPATH=. uv run uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001
 
+studio:
+	PYTHONPATH=packages/studio:. uv run python -m studio.main
+
+studio-worker:
+	PYTHONPATH=packages/studio:. uv run python -m studio.workers.run_generation_worker
+
+studio-ragflow-worker:
+	PYTHONPATH=packages/studio:. uv run python -m studio.workers.run_ragflow_worker
+
 test:
 	PYTHONPATH=. uv run pytest tests/ -v
 

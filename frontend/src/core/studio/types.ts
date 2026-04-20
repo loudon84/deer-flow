@@ -13,17 +13,19 @@ export interface TemplateSummary {
   current_version: number;
   default_model_name: string;
   default_generation_mode: string;
+  reasoning_effort?: string | null;
   tags: string[];
 }
 
 export interface TemplateVersion {
   id: string;
   version: number;
-  schema: Record<string, unknown>;
+  input_schema: Record<string, unknown>;
   system_prompt?: string | null;
   user_prompt_template: string;
   default_model_name: string;
   default_generation_mode: string;
+  reasoning_effort?: string | null;
   example_input?: Record<string, unknown> | null;
   example_output?: string | null;
 }
@@ -32,20 +34,31 @@ export interface TemplateDetail extends TemplateSummary {
   versions?: TemplateVersion[];
 }
 
+export interface WorkLog {
+  step: string;
+  timestamp: string;
+  details: Record<string, unknown>;
+}
+
 export interface JobSummary {
   id: string;
   template_id: string;
   template_name?: string;
-  status: "pending" | "running" | "completed" | "failed";
+  status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
   document_id?: string | null;
   created_at: string;
   updated_at: string;
   last_error?: string | null;
+  model_name?: string;
+  total_prompt_tokens?: number;
+  total_completion_tokens?: number;
+  total_tokens?: number;
 }
 
 export interface JobDetail extends JobSummary {
   input_data?: Record<string, unknown>;
   output_data?: Record<string, unknown>;
+  work_logs?: WorkLog[];
 }
 
 export interface DocumentDetail {

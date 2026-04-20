@@ -4,13 +4,21 @@
 
 "use client";
 
-import { RefreshCw, History, PenTool } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, History, PenTool, Edit } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useTemplate } from "@/core/studio";
+import { ArticleCreateForm } from "./article-create-form";
 
 interface TemplateDetailProps {
   templateId: string;
@@ -18,6 +26,7 @@ interface TemplateDetailProps {
 
 export function TemplateDetail({ templateId }: TemplateDetailProps) {
   const { data: template, isLoading, error, refetch } = useTemplate(templateId);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -90,10 +99,14 @@ export function TemplateDetail({ templateId }: TemplateDetailProps) {
           </div>
 
           <div className="flex gap-2">
-            <Button asChild>
-              <Link href={`/workspace/studio/create?templateId=${template.id}`}>
-                <PenTool className="mr-2 h-4 w-4" />
-                Create Article
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <PenTool className="mr-2 h-4 w-4" />
+              Create Article
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/workspace/studio/templates/${template.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Template
               </Link>
             </Button>
             <Button variant="outline" asChild>
@@ -107,6 +120,19 @@ export function TemplateDetail({ templateId }: TemplateDetailProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Create Article Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create Article</DialogTitle>
+          </DialogHeader>
+          <ArticleCreateForm
+            templateId={template.id}
+            onSuccess={() => setCreateDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

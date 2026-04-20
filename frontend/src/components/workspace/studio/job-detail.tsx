@@ -10,8 +10,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useJob, useRetryJob } from "@/core/studio";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
 
 interface JobDetailProps {
@@ -119,6 +127,62 @@ export function JobDetail({ jobId }: JobDetailProps) {
               <pre className="bg-muted overflow-x-auto rounded-md p-3 text-xs">
                 {JSON.stringify(job.input_data, null, 2)}
               </pre>
+            </div>
+          )}
+
+          {/* Tokens Usage */}
+          {(job.total_prompt_tokens || job.total_completion_tokens || job.total_tokens) && (
+            <div>
+              <p className="mb-2 text-sm font-medium">Tokens Usage</p>
+              <div className="grid grid-cols-3 gap-4 rounded-md border p-3">
+                <div>
+                  <p className="text-muted-foreground text-xs">Prompt Tokens</p>
+                  <p className="font-medium">{job.total_prompt_tokens || 0}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Completion Tokens</p>
+                  <p className="font-medium">{job.total_completion_tokens || 0}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Total Tokens</p>
+                  <p className="font-medium">{job.total_tokens || 0}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Work Logs */}
+          {job.work_logs && job.work_logs.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-medium">Work Logs</p>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[180px]">Timestamp</TableHead>
+                      <TableHead className="w-[150px]">Step</TableHead>
+                      <TableHead>Details</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {job.work_logs.map((log, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="text-xs">
+                          {format(new Date(log.timestamp), "yyyy-MM-dd HH:mm:ss")}
+                        </TableCell>
+                        <TableCell className="font-medium text-xs">
+                          {log.step}
+                        </TableCell>
+                        <TableCell>
+                          <pre className="bg-muted overflow-x-auto rounded p-2 text-xs">
+                            {JSON.stringify(log.details, null, 2)}
+                          </pre>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
 

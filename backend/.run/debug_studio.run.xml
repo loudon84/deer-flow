@@ -1,0 +1,32 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="debug_studio" type="PythonConfigurationType" factoryName="Python">
+    <module name="backend" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="PYTHONPATH" value="packages/studio:." />
+      <env name="STUDIO_HOST" value="0.0.0.0" />
+      <env name="STUDIO_PORT" value="8320" />
+      <env name="STUDIO_MONGODB_URI" value="mongodb://localhost:27017" />
+      <env name="STUDIO_MONGODB_DB" value="studio" />
+    </envs>
+    <option name="SDK_HOME" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+    <option name="IS_MODULE_SDK" value="true" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/backend/debug_studio.py" />
+    <option name="PARAMETERS" value="" />
+    <option name="SHOW_COMMAND_LINE" value="false" />
+    <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="false" />
+    <option name="REDIRECT_INPUT" value="false" />
+    <option name="INPUT_FILE" value="" />
+    <option name="SHOW_STDOUT" value="true" />
+    <option name="SHOW_STDERR" value="true" />
+    <option name="SHOW_INTERPRETER_WARNINGS" value="true" />
+    <option name="SHOW_DEBUG_PROMPT" value="true" />
+    <option name="USE_CUSTOM_ENV_VARS" value="true" />
+    <method v="2" />
+  </configuration>
+</component>

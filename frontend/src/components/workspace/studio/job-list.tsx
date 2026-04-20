@@ -8,16 +8,32 @@ import { ListTodo, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useJobs } from "@/core/studio";
 import { formatDistanceToNow } from "date-fns";
 
 const statusColors: Record<string, string> = {
-  pending: "bg-yellow-500",
+  queued: "bg-yellow-500",
   running: "bg-blue-500",
-  completed: "bg-green-500",
+  succeeded: "bg-green-500",
   failed: "bg-red-500",
+  cancelled: "bg-gray-500",
+};
+
+const statusLabels: Record<string, string> = {
+  queued: "Queued",
+  running: "Running",
+  succeeded: "Succeeded",
+  failed: "Failed",
+  cancelled: "Cancelled",
 };
 
 export function JobList() {
@@ -26,17 +42,30 @@ export function JobList() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-5 w-1/3" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-        ))}
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead>Template</TableHead>
+                <TableHead>Model</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Document</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
@@ -63,42 +92,74 @@ export function JobList() {
   }
 
   return (
-    <div className="space-y-4">
-      {jobs.map((job) => (
-        <Link key={job.id} href={`/workspace/studio/jobs/${job.id}`}>
-          <Card className="cursor-pointer transition-shadow hover:shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <span
-                    className={`h-2 w-2 rounded-full ${statusColors[job.status]}`}
-                  />
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead>Template</TableHead>
+            <TableHead>Model</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead>Document</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {jobs.map((job) => (
+            <TableRow
+              key={job.id}
+              className="cursor-pointer hover:bg-muted/50"
+            >
+              <TableCell>
+                <Link href={`/workspace/studio/jobs/${job.id}`}>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={`h-2 w-2 rounded-full ${statusColors[job.status]}`}
+                    />
+                    <span className="capitalize text-sm">
+                      {statusLabels[job.status]}
+                    </span>
+                  </span>
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link 
+                  href={`/workspace/studio/jobs/${job.id}`}
+                  className="hover:underline"
+                >
                   {job.template_name || `Job ${job.id.slice(0, 8)}`}
-                </span>
-                <span className="text-muted-foreground text-sm font-normal capitalize">
-                  {job.status}
-                </span>
-              </CardTitle>
-              <CardDescription>
-                Created{" "}
-                {formatDistanceToNow(new Date(job.created_at), {
-                  addSuffix: true,
-                })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {job.last_error && (
-                <p className="text-destructive text-sm">{job.last_error}</p>
-              )}
-              {job.document_id && (
-                <p className="text-muted-foreground text-sm">
-                  Document: {job.document_id.slice(0, 8)}...
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </Link>
-      ))}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={`/workspace/studio/jobs/${job.id}`}>
+                  <span className="text-muted-foreground text-sm">
+                    {job.model_name || "-"}
+                  </span>
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={`/workspace/studio/jobs/${job.id}`}>
+                  <span className="text-muted-foreground text-sm">
+                    {formatDistanceToNow(new Date(job.created_at), {
+                      addSuffix: true,
+                    })}
+                  </span>
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={`/workspace/studio/jobs/${job.id}`}>
+                  {job.document_id ? (
+                    <span className="text-muted-foreground text-sm">
+                      {job.document_id.slice(0, 8)}...
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">-</span>
+                  )}
+                </Link>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

@@ -256,6 +256,8 @@ tool_groups:
   - name: file:read
   - name: file:write
   - name: bash
+  # Writing tools (e.g. doubao_writer_tool)
+  # - name: writing
 
 # ============================================================================
 # Tools Configuration
@@ -339,6 +341,21 @@ tools:
   - name: bash
     group: bash
     use: deerflow.sandbox.tools:bash_tool
+
+  # Writing tool: Doubao Writer (Doubao Chat Completions API)
+  # Requires env:
+  # - DOUBAO_API_KEY (required)
+  # - DOUBAO_MODEL   (required)
+  # Optional env:
+  # - DOUBAO_BASE_URL
+  # - DOUBAO_TIMEOUT_SECONDS (default: 120)
+  # - name: doubao_writer_tool
+  #   group: writing
+  #   use: deerflow.community.tools.doubao_writer:doubao_writer_tool
+  #   # Optional defaults (can also be provided at runtime as tool input)
+  #   # system_prompt: "你是一个专业中文写作助手。"
+  #   # temperature: 0.7
+  #   # max_tokens: 2048
 
 # ============================================================================
 # Tool Search Configuration (Deferred Tool Loading)

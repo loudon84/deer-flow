@@ -5,8 +5,8 @@
 "use client";
 
 import { useState } from "react";
-import { RefreshCw, Save } from "lucide-react";
-
+import { RefreshCw, Save, Copy } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDocument, useUpdateDocument } from "@/core/studio";
 import { toast } from "sonner";
+
+const BlockNoteEditorDynamic = dynamic(
+  () =>
+    import("@/components/ai-elements/blocknote-editor").then((mod) => ({
+      default: mod.BlockNoteEditor,
+    })),
+  { ssr: false },
+);
 
 interface DocumentEditorProps {
   documentId: string;
@@ -76,52 +84,85 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
     );
   }
 
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(documentId);
+      toast.success("Document ID copied to clipboard");
+    } catch (error) {
+      toast.error("Failed to copy to clipboard");
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Edit Document</span>
-          <Button
-            onClick={handleSave}
-            disabled={updateMutation.isPending}
-            size="sm"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Save
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <label className="mb-2 block text-sm font-medium">Title</label>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Document title"
-          />
-        </div>
+    <div className="grid gap-6 lg:grid-cols-10">
+      {/* Left panel - 7/10 */}
+      <div className="lg:col-span-7">
+        <Card>
+          <CardContent>
+            <div className="min-h-[400px] border-input">
+              <BlockNoteEditorDynamic
+                key={documentId}
+                className="h-full"
+                markdown={content}
+                editable={true}
+                showTOC={true}
+              />
+            </div>   
+          </CardContent>
+        </Card>                 
+      </div>
+      {/* Right panel - 3/10 */}
+      <div className="lg:col-span-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">              
+              <Button
+                onClick={handleSave}
+                disabled={updateMutation.isPending}
+                size="sm"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save
+              </Button>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium">Content</label>
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Document content (Markdown)"
-            rows={15}
-            className="font-mono text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium">Summary</label>
-          <Textarea
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-            placeholder="Document summary"
-            rows={3}
-          />
-        </div>
-      </CardContent>
-    </Card>
+              <div className="mt-0.5 flex items-center gap-2">              
+              <div className="flex items-center gap-1">
+                <code className="text-muted-foreground text-xs font-mono">
+                  {documentId.slice(0, 16)}...
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5"
+                  onClick={handleCopyId}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium">Title</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Document title"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium">Summary</label>
+              <Textarea
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                placeholder="Document summary"
+                rows={6}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

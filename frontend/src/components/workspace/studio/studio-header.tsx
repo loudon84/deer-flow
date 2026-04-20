@@ -42,15 +42,7 @@ export function StudioHeader({ className }: { className?: string }) {
             <SidebarTrigger />
           </div>
         )}
-      </div>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton disabled>
-            <PenTool size={16} />
-            <span>Studio</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
+      </div>      
     </>
   );
 }

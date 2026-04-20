@@ -14,13 +14,13 @@ import type {
 
 export function listDocuments() {
   return articleStudioClient.get<DocumentDetail[]>(
-    "/api/article-studio/documents",
+    "/api/v1/documents",
   );
 }
 
 export function getDocument(documentId: string) {
   return articleStudioClient.get<DocumentDetail>(
-    `/api/article-studio/documents/${documentId}`,
+    `/api/v1/documents/${documentId}`,
   );
 }
 
@@ -29,7 +29,7 @@ export function updateDocument(
   payload: UpdateDocumentPayload,
 ) {
   return articleStudioClient.put<{ ok: true }>(
-    `/api/article-studio/documents/${documentId}`,
+    `/api/v1/documents/${documentId}`,
     payload,
   );
 }
@@ -39,7 +39,7 @@ export function submitApproval(
   payload?: SubmitApprovalPayload,
 ) {
   return articleStudioClient.post<{ ok: true }>(
-    `/api/article-studio/documents/${documentId}/submit-approval`,
+    `/api/v1/documents/${documentId}/submit-approval`,
     payload ?? {},
   );
 }
@@ -49,7 +49,7 @@ export function approveDocument(
   payload: ApproveDocumentPayload,
 ) {
   return articleStudioClient.post<{ ok: true }>(
-    `/api/article-studio/documents/${documentId}/approve`,
+    `/api/v1/documents/${documentId}/approve`,
     payload,
   );
 }
@@ -59,19 +59,19 @@ export function rejectDocument(
   payload: RejectDocumentPayload,
 ) {
   return articleStudioClient.post<{ ok: true }>(
-    `/api/article-studio/documents/${documentId}/reject`,
+    `/api/v1/documents/${documentId}/reject`,
     payload,
   );
 }
 
 export function getRagflowStatus(documentId: string) {
   return articleStudioClient.get<RAGFlowStatus>(
-    `/api/article-studio/documents/${documentId}/ragflow-status`,
+    `/api/v1/documents/${documentId}/ragflow-status`,
   );
 }
 
 export function retryRagflow(documentId: string) {
   return articleStudioClient.post<{ ok: true }>(
-    `/api/article-studio/documents/${documentId}/ragflow-retry`,
+    `/api/v1/documents/${documentId}/ragflow-retry`,
   );
 }
