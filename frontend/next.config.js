@@ -10,6 +10,9 @@ function getInternalServiceURL(envKey, fallbackURL) {
     ? configured.replace(/\/+$/, "")
     : fallbackURL;
 }
+import nextra from "nextra";
+
+const withNextra = nextra({});
 
 // For local development without Nginx
 const LOCAL_LANGGRAPH_URL = "http://192.168.70.166:2024";
@@ -19,6 +22,10 @@ const LOCAL_STUDIO_URL = "http://localhost:8320";
 
 /** @type {import("next").NextConfig} */
 const config = {
+  i18n: {
+    locales: ["en", "zh"],
+    defaultLocale: "en",
+  },
   devIndicators: false,
   async rewrites() {
     const rewrites = [];
@@ -79,4 +86,4 @@ const config = {
   },
 };
 
-export default config;
+export default withNextra(config);
