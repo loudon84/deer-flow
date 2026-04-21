@@ -1,5 +1,7 @@
 from functools import lru_cache
+
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
 from studio.settings.studio_settings import StudioSettings
 
 

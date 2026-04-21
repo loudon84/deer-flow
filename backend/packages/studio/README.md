@@ -68,8 +68,8 @@ ARTICLE_STUDIO_RAGFLOW_API_KEY=your_api_key
 ARTICLE_STUDIO_MODEL_CONFIG_PATH=./article-models.yaml
 
 # Worker 配置
-ARTICLE_WORKER_POLL_SECONDS=3
-ARTICLE_RAGFLOW_WORKER_POLL_SECONDS=5
+STUDIO_WORKER_POLL_SECONDS=3        # Generation Worker 轮询间隔，设为 0 禁用内置 Worker
+STUDIO_RAGFLOW_WORKER_POLL_SECONDS=5
 ```
 
 ## 安装依赖
@@ -86,7 +86,9 @@ python -m studio.scripts.init_mongo_indexes
 
 ## 启动服务
 
-### 启动 API 服务
+### 启动 API 服务（内置 Generation Worker）
+
+API 服务通过 FastAPI `lifespan` 机制在启动时自动拉起 Generation Worker 协程，无需单独启动 Worker 进程：
 
 ```bash
 python -m studio.main
@@ -98,17 +100,32 @@ python -m studio.main
 uvicorn studio.api.app:app --host 0.0.0.0 --port 8320
 ```
 
-### 启动 Generation Worker
+Generation Worker 与 API 共享同一个 asyncio 事件循环，以协程方式并发运行。API 收到 SIGTERM 时会自动触发 Worker 优雅停止。
+
+**禁用内置 Worker**：设置 `STUDIO_WORKER_POLL_SECONDS=0` 即可跳过 Worker 启动，适用于仅部署 API 层的场景。
+
+### 单独启动 Generation Worker（可选）
+
+如果需要将 Worker 部署为独立进程（例如多实例部署时避免重复消费），可使用独立入口：
 
 ```bash
 python -m studio.workers.run_generation_worker
 ```
+
+> **注意**：使用独立 Worker 进程时，应设置 `STUDIO_WORKER_POLL_SECONDS=0` 禁用 API 进程内的 Worker，否则两者会同时轮询同一个 MongoDB 队列，导致任务被重复消费。
 
 ### 启动 RAGFlow Worker
 
 ```bash
 python -m studio.workers.run_ragflow_worker
 ```
+
+### 多实例部署建议
+
+当部署多个 API 实例时，每个实例默认都会启动一个内置 Worker，可能导致任务重复消费。推荐方案：
+
+- **方案 A**：仅部署单实例 API（含 Worker），其余实例设置 `STUDIO_WORKER_POLL_SECONDS=0`
+- **方案 B**：所有 API 实例设置 `STUDIO_WORKER_POLL_SECONDS=0`，单独部署一个 Worker 进程
 
 ## API 文档
 

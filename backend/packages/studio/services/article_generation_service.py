@@ -1,17 +1,20 @@
 from bson import ObjectId
-from studio.repositories import (
-    TemplateRepository,
-    TemplateVersionRepository,
-    JobRepository,
-    DocumentRepository,
-)
+
 from studio.integrations import ModelFactoryAdapter
-from studio.services.strategy import get_strategy_registry
-from studio.services.prompt_render_service import PromptRenderService
 from studio.models.persistence import (
     TEMPLATE_STATUS_ACTIVE,
-    JOB_STATUS_QUEUED,
 )
+from studio.repositories import (
+    DocumentRepository,
+    JobRepository,
+    TemplateRepository,
+    TemplateVersionRepository,
+)
+from studio.services.article_prompt_build_service import ArticlePromptBuildService
+from studio.services.article_runtime_execution_service import ArticleRuntimeExecutionService
+from studio.services.prompt_render_service import PromptRenderService
+from studio.services.strategy import get_strategy_registry
+from studio.settings import StudioSettings
 
 
 class ArticleGenerationService:
@@ -25,6 +28,8 @@ class ArticleGenerationService:
         self.prompt_service = PromptRenderService()
         self.model_adapter = ModelFactoryAdapter()
         self.strategy_registry = get_strategy_registry()
+        self._prompt_build = ArticlePromptBuildService()
+        self._runtime_exec = ArticleRuntimeExecutionService()
 
     async def create_job(
         self,
@@ -139,8 +144,8 @@ class ArticleGenerationService:
         """取消任务"""
         return await self.job_repo.cancel(job_id)
 
-    async def execute_job(self, job_id: str) -> str:
-        """执行生成任务（由 Worker 调用）"""
+    async def execute_job(self, job_id: str) -> str | None:
+        """执行生成任务（由 Worker 调用）。若走 Runtime Facade 则异步由 DeerFlow 完成，返回 None。"""
         # 获取任务
         job = await self.job_repo.find_by_id(job_id)
         if not job:
@@ -148,6 +153,17 @@ class ArticleGenerationService:
 
         # 设置为运行中
         await self.job_repo.set_running(job_id)
+
+        if StudioSettings().use_runtime_facade:
+            try:
+                await self._runtime_exec.execute_job(
+                    job,
+                    prompt_build=self._prompt_build.build_runtime_request_from_job,
+                )
+                return None
+            except Exception as e:
+                await self.job_repo.set_failed(job_id, str(e))
+                raise
 
         # 记录工作日志的回调函数
         async def log_callback(step: str, details: dict):

@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RefreshCw, Save, Copy } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,11 @@ const BlockNoteEditorDynamic = dynamic(
 
 interface DocumentEditorProps {
   documentId: string;
+  /** Fired when title/summary/正文编辑导致相对上次保存或加载有未保存变更 */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function DocumentEditor({ documentId }: DocumentEditorProps) {
+export function DocumentEditor({ documentId, onDirtyChange }: DocumentEditorProps) {
   const { data: document, isLoading, error, refetch } = useDocument(documentId);
   const updateMutation = useUpdateDocument(documentId);
 
@@ -35,6 +37,8 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
   const [content, setContent] = useState("");
   const [summary, setSummary] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [baseline, setBaseline] = useState({ title: "", summary: "" });
+  const [contentDirty, setContentDirty] = useState(false);
 
   // Initialize form when document loads
   if (document && !isEditing) {
@@ -44,6 +48,24 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
     setIsEditing(true);
   }
 
+  useEffect(() => {
+    if (!document) return;
+    setBaseline({
+      title: document.title,
+      summary: document.summary ?? "",
+    });
+    setContentDirty(false);
+  }, [document?.id, document?.updated_at, document]);
+
+  const dirty =
+    title !== baseline.title ||
+    summary !== baseline.summary ||
+    contentDirty;
+
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+
   const handleSave = async () => {
     try {
       await updateMutation.mutateAsync({
@@ -51,6 +73,8 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
         content_markdown: content,
         summary: summary || undefined,
       });
+      setBaseline({ title, summary });
+      setContentDirty(false);
       toast.success("Document saved");
     } catch (error) {
       toast.error("Failed to save document");
@@ -99,23 +123,24 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
       <div className="lg:col-span-7">
         <Card>
           <CardContent>
-            <div className="min-h-[400px] border-input">
+            <div className="border-input min-h-[400px]">
               <BlockNoteEditorDynamic
                 key={documentId}
                 className="h-full"
                 markdown={content}
                 editable={true}
                 showTOC={true}
+                onDocumentChange={() => setContentDirty(true)}
               />
-            </div>   
+            </div>
           </CardContent>
-        </Card>                 
+        </Card>
       </div>
       {/* Right panel - 3/10 */}
       <div className="lg:col-span-3">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">              
+            <CardTitle className="flex items-center justify-between">
               <Button
                 onClick={handleSave}
                 disabled={updateMutation.isPending}
@@ -125,21 +150,21 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
                 Save
               </Button>
 
-              <div className="mt-0.5 flex items-center gap-2">              
-              <div className="flex items-center gap-1">
-                <code className="text-muted-foreground text-xs font-mono">
-                  {documentId.slice(0, 16)}...
-                </code>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5"
-                  onClick={handleCopyId}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
+              <div className="mt-0.5 flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <code className="text-muted-foreground font-mono text-xs">
+                    {documentId.slice(0, 16)}...
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={handleCopyId}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-            </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

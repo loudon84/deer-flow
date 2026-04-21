@@ -42,7 +42,7 @@ export default function DocumentsPage() {
 
       {/* Create Document Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="min-w-[800px] max-w-4xl">
           <DialogHeader>
             <DialogTitle>Create Document</DialogTitle>
           </DialogHeader>

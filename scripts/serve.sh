@@ -150,8 +150,8 @@ if [ "${SKIP_LANGGRAPH_SERVER:-0}" != "1" ]; then
     if [ "$LANGGRAPH_ALLOW_BLOCKING" = "1" ]; then
         LANGGRAPH_ALLOW_BLOCKING_FLAG="--allow-blocking"
     fi
-    (cd backend && NO_COLOR=1 uv run langgraph dev --no-browser $LANGGRAPH_ALLOW_BLOCKING_FLAG --n-jobs-per-worker "$LANGGRAPH_JOBS_PER_WORKER" --server-log-level $LANGGRAPH_LOG_LEVEL $LANGGRAPH_EXTRA_FLAGS > ../logs/langgraph.log 2>&1) &
-    (cd backend && NO_COLOR=1 uv run langgraph dev --host 0.0.0.0 --no-browser --allow-blocking --server-log-level $LANGGRAPH_LOG_LEVEL $LANGGRAPH_EXTRA_FLAGS > ../logs/langgraph.log 2>&1) &
+    (cd backend && NO_COLOR=1 uv run langgraph dev --host 0.0.0.0 --no-browser $LANGGRAPH_ALLOW_BLOCKING_FLAG --n-jobs-per-worker "$LANGGRAPH_JOBS_PER_WORKER" --server-log-level $LANGGRAPH_LOG_LEVEL $LANGGRAPH_EXTRA_FLAGS > ../logs/langgraph.log 2>&1) &
+    #(cd backend && NO_COLOR=1 uv run langgraph dev --host 0.0.0.0 --no-browser --allow-blocking --server-log-level $LANGGRAPH_LOG_LEVEL $LANGGRAPH_EXTRA_FLAGS > ../logs/langgraph.log 2>&1) &
     ./scripts/wait-for-port.sh 2024 60 "LangGraph" || {
         echo "  See logs/langgraph.log for details"
         tail -20 logs/langgraph.log

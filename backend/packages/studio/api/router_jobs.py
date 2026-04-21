@@ -1,15 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
+
 from studio.api.deps import get_generation_service
 from studio.models.dto import (
-    JobCreateRequest,
-    JobResponse,
-    JobDetailResponse,
-    WorkLogResponse,
     IdResponse,
+    JobCreateRequest,
+    JobDetailResponse,
+    JobResponse,
     OkResponse,
+    WorkLogResponse,
 )
-from studio.services import ArticleGenerationService
 from studio.repositories import TemplateRepository
+from studio.services import ArticleGenerationService
 
 router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
 
@@ -63,6 +64,9 @@ async def _job_to_detail_response(job: dict, template_repo: TemplateRepository) 
         total_completion_tokens=job.get("totalCompletionTokens"),
         total_tokens=job.get("totalTokens"),
         work_logs=work_logs,
+        runtime_session_id=str(job["runtimeSessionId"]) if job.get("runtimeSessionId") else None,
+        runtime_provider=job.get("runtimeProvider"),
+        runtime_status=job.get("runtimeStatus"),
     )
 
 

@@ -1,12 +1,15 @@
 from datetime import datetime
+
 from bson import ObjectId
-from studio.db.collections import get_collection, COLLECTION_ARTICLE_JOBS
+
+from studio.db.collections import COLLECTION_ARTICLE_JOBS, get_collection
 from studio.models.persistence import (
+    JOB_STATUS_CANCELLED,
+    JOB_STATUS_FAILED,
     JOB_STATUS_QUEUED,
     JOB_STATUS_RUNNING,
     JOB_STATUS_SUCCEEDED,
-    JOB_STATUS_FAILED,
-    JOB_STATUS_CANCELLED,
+    JOB_STATUS_WAITING_HUMAN,
 )
 
 
@@ -156,6 +159,34 @@ class JobRepository:
             }
         )
         return result.modified_count > 0
+
+    async def patch_runtime_binding(
+        self,
+        job_id: str,
+        *,
+        runtime_session_id: str,
+        runtime_provider: str,
+        runtime_status: str,
+    ) -> bool:
+        """绑定 DeerFlow runtime session 到任务"""
+        if not ObjectId.is_valid(job_id) or not ObjectId.is_valid(runtime_session_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": ObjectId(job_id)},
+            {
+                "$set": {
+                    "runtimeProvider": runtime_provider,
+                    "runtimeSessionId": ObjectId(runtime_session_id),
+                    "runtimeStatus": runtime_status,
+                    "updatedAt": datetime.utcnow(),
+                }
+            },
+        )
+        return result.modified_count > 0
+
+    async def set_waiting_human(self, job_id: str) -> bool:
+        """任务进入等待人工（HITL）"""
+        return await self.update_status(job_id, JOB_STATUS_WAITING_HUMAN)
 
     async def update_tokens_usage(self, job_id: str, tokens_info: dict) -> bool:
         """更新 tokens 使用量

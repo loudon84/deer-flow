@@ -14,6 +14,7 @@ from .document_dto import (
     ApproveDocumentRequest,
     RejectDocumentRequest,
     ApprovalResponse,
+    RagflowStatusResponse,
 )
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "ApproveDocumentRequest",
     "RejectDocumentRequest",
     "ApprovalResponse",
+    "RagflowStatusResponse",
 ]

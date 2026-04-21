@@ -1,16 +1,18 @@
 from datetime import datetime
+
 from bson import ObjectId
-from studio.db.collections import get_collection, COLLECTION_ARTICLE_DOCUMENTS
+
+from studio.db.collections import COLLECTION_ARTICLE_DOCUMENTS, get_collection
 from studio.models.persistence import (
+    APPROVAL_STATUS_APPROVED,
     APPROVAL_STATUS_DRAFT,
     APPROVAL_STATUS_PENDING,
-    APPROVAL_STATUS_APPROVED,
     APPROVAL_STATUS_REJECTED,
+    RAGFLOW_STATUS_FAILED,
+    RAGFLOW_STATUS_INDEXED,
+    RAGFLOW_STATUS_INDEXING,
     RAGFLOW_STATUS_NOT_INDEXED,
     RAGFLOW_STATUS_QUEUED,
-    RAGFLOW_STATUS_INDEXING,
-    RAGFLOW_STATUS_INDEXED,
-    RAGFLOW_STATUS_FAILED,
 )
 
 
@@ -31,6 +33,81 @@ class DocumentRepository:
 
         result = await self.collection.insert_one(document_data)
         return str(result.inserted_id)
+
+    async def create_from_runtime_result(
+        self,
+        *,
+        job_id: str,
+        template_id: str,
+        title: str,
+        content_markdown: str,
+        summary: str | None,
+        keywords: list[str] | None,
+        metadata: dict | None = None,
+    ) -> str:
+        """由 runtime 物化结果创建文档（绑定 job / template）"""
+        if not ObjectId.is_valid(job_id) or not ObjectId.is_valid(template_id):
+            raise ValueError("invalid job_id or template_id")
+        document_data: dict = {
+            "jobId": ObjectId(job_id),
+            "templateId": ObjectId(template_id),
+            "title": title,
+            "contentMarkdown": content_markdown,
+            "summary": summary,
+            "keywords": keywords or [],
+        }
+        if metadata:
+            document_data["runtimeMetadata"] = metadata
+        return await self.create(document_data)
+
+    async def append_runtime_session(self, document_id: str, session_id: str) -> bool:
+        """记录文档关联的 runtime session"""
+        if not ObjectId.is_valid(document_id) or not ObjectId.is_valid(session_id):
+            return False
+        sid = ObjectId(session_id)
+        result = await self.collection.update_one(
+            {"_id": ObjectId(document_id)},
+            {
+                "$push": {"runtimeSessionIds": sid},
+                "$set": {
+                    "latestRuntimeSessionId": sid,
+                    "updatedAt": datetime.utcnow(),
+                },
+            },
+        )
+        return result.modified_count > 0
+
+    async def apply_runtime_result(
+        self,
+        document_id: str,
+        *,
+        title: str | None,
+        content_markdown: str,
+        apply_mode: str,
+    ) -> tuple[bool, int]:
+        """将 AI 结果应用到文档：replace 覆盖正文；append 追加；new_version 递增 version"""
+        if not ObjectId.is_valid(document_id):
+            return False, 0
+        doc = await self.find_by_id(document_id)
+        if not doc:
+            return False, 0
+        new_version = int(doc.get("version", 1))
+        update_data: dict = {"updatedAt": datetime.utcnow()}
+        if title is not None:
+            update_data["title"] = title
+        if apply_mode == "replace":
+            update_data["contentMarkdown"] = content_markdown
+        elif apply_mode == "append":
+            prev = doc.get("contentMarkdown") or ""
+            update_data["contentMarkdown"] = prev + "\n\n" + content_markdown
+        elif apply_mode == "new_version":
+            new_version += 1
+            update_data["version"] = new_version
+            update_data["contentMarkdown"] = content_markdown
+        else:
+            update_data["contentMarkdown"] = content_markdown
+        ok = await self.update(document_id, update_data)
+        return ok, new_version if ok else 0
 
     async def find_by_id(self, document_id: str) -> dict | None:
         """根据 ID 查询文档"""

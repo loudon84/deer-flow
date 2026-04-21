@@ -16,3 +16,4 @@ export * from "./document-list";
 export * from "./document-editor";
 export * from "./approval-panel";
 export * from "./ragflow-status-card";
+export * from "./runtime";

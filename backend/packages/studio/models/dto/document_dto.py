@@ -12,6 +12,8 @@ class DocumentResponse(BaseModel):
     approval_status: str
     ragflow_status: str
     version: int
+    runtime_session_ids: list[str] | None = None
+    latest_runtime_session_id: str | None = None
 
 
 class DocumentUpdateRequest(BaseModel):
@@ -52,3 +54,13 @@ class ApprovalResponse(BaseModel):
     status: str
     comment: str | None = None
     created_at: str
+
+
+class RagflowStatusResponse(BaseModel):
+    """RAGFlow 状态响应"""
+
+    document_id: str
+    ragflow_status: str
+    ragflow_document_id: str | None = None
+    knowledgebase_id: str | None = None
+    last_error: str | None = None

@@ -7,6 +7,9 @@ COLLECTION_ARTICLE_JOBS = "article_jobs"
 COLLECTION_ARTICLE_DOCUMENTS = "article_documents"
 COLLECTION_ARTICLE_APPROVALS = "article_approvals"
 COLLECTION_ARTICLE_RAGFLOW_TASKS = "article_ragflow_tasks"
+COLLECTION_RUNTIME_SESSIONS = "portal_runtime_sessions"
+COLLECTION_RUNTIME_EVENTS = "portal_runtime_events"
+COLLECTION_HITL_ACTIONS = "portal_hitl_actions"
 
 
 def get_collection(name: str):

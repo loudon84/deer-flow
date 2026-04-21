@@ -44,7 +44,7 @@ export function CreateTemplateForm() {
   const [tags, setTags] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [userPromptTemplate, setUserPromptTemplate] = useState("");
-  const [schema, setSchema] = useState('{\n  "type": "object",\n  "properties": {}\n}');
+  const [inputSchemaNames, setInputSchemaNames] = useState<string[]>([""]);
 
   // Load available models
   useEffect(() => {
@@ -81,13 +81,27 @@ export function CreateTemplateForm() {
       return;
     }
 
-    let parsedSchema;
-    try {
-      parsedSchema = JSON.parse(schema);
-    } catch {
-      toast.error("Invalid JSON in schema");
+    // 过滤空值并去重
+    const trimmedNames = inputSchemaNames
+      .map(name => name.trim())
+      .filter(name => name.length > 0);
+    
+    const uniqueNames = [...new Set(trimmedNames)];
+    
+    if (uniqueNames.length !== trimmedNames.length) {
+      toast.error("Input schema names must be unique");
       return;
     }
+
+    // 构建 JSON Schema
+    const parsedSchema = {
+      type: "object",
+      properties: uniqueNames.reduce((acc, name) => {
+        acc[name] = { type: "string" };
+        return acc;
+      }, {} as Record<string, { type: string }>),
+      required: uniqueNames,
+    };
 
     try {
       const result = await createMutation.mutateAsync({
@@ -312,17 +326,54 @@ export function CreateTemplateForm() {
         <div className="border-t pt-6">
           <h3 className="mb-4 text-lg font-semibold">Input Schema</h3>
           
-          <div className="space-y-2">
-            <Label htmlFor="schema">JSON Schema</Label>
-            <Textarea
-              id="schema"
-              value={schema}
-              onChange={(e) => setSchema(e.target.value)}
-              rows={10}
-              className="font-mono text-sm"
-            />
+          <div className="space-y-3">
+            {inputSchemaNames.map((name, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <div className="flex-1 space-y-1">
+                  <Label htmlFor={`schema-${index}`}>
+                    {index === 0 ? "Object Name" : `Object Name ${index + 1}`}
+                  </Label>
+                  <Input
+                    id={`schema-${index}`}
+                    value={name}
+                    onChange={(e) => {
+                      const newNames = [...inputSchemaNames];
+                      newNames[index] = e.target.value;
+                      setInputSchemaNames(newNames);
+                    }}
+                    placeholder="e.g., title, topic, keywords"
+                  />
+                </div>
+                {inputSchemaNames.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-6"
+                    onClick={() => {
+                      const newNames = inputSchemaNames.filter((_, i) => i !== index);
+                      setInputSchemaNames(newNames);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            ))}
+            
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setInputSchemaNames([...inputSchemaNames, ""])}
+              className="mt-2"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Input Schema
+            </Button>
+            
             <p className="text-muted-foreground text-sm">
-              Define the input parameters for this template using JSON Schema
+              Define input parameter names for this template. Use {"{{variable_name}}"} in the user prompt template to reference these values.
             </p>
           </div>
         </div>

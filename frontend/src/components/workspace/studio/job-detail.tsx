@@ -27,10 +27,14 @@ interface JobDetailProps {
 }
 
 const statusColors: Record<string, string> = {
+  queued: "bg-yellow-500",
   pending: "bg-yellow-500",
   running: "bg-blue-500",
+  waiting_human: "bg-amber-500",
+  succeeded: "bg-green-500",
   completed: "bg-green-500",
   failed: "bg-red-500",
+  cancelled: "bg-gray-500",
 };
 
 export function JobDetail({ jobId }: JobDetailProps) {
@@ -121,11 +125,44 @@ export function JobDetail({ jobId }: JobDetailProps) {
             </div>
           )}
 
-          {job.input_data && (
+          {/* Input Parameters */}
+          {(job.input_data || job.input_params) && (
             <div>
-              <p className="mb-2 text-sm font-medium">Input Data</p>
+              <p className="mb-2 text-sm font-medium">Input Parameters</p>
               <pre className="bg-muted overflow-x-auto rounded-md p-3 text-xs">
-                {JSON.stringify(job.input_data, null, 2)}
+                {JSON.stringify(job.input_data || job.input_params, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {/* Prompt Override */}
+          {job.prompt_override && (
+            <div>
+              <p className="mb-2 text-sm font-medium">Prompt Override</p>
+              <pre className="bg-muted overflow-x-auto rounded-md p-3 text-xs">
+                {typeof job.prompt_override === 'string'
+                  ? job.prompt_override
+                  : JSON.stringify(job.prompt_override, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {/* System Prompt Override */}
+          {job.system_prompt_override && (
+            <div>
+              <p className="mb-2 text-sm font-medium">System Prompt Override</p>
+              <pre className="bg-muted overflow-x-auto rounded-md p-3 text-xs whitespace-pre-wrap">
+                {job.system_prompt_override}
+              </pre>
+            </div>
+          )}
+
+          {/* User Prompt Override */}
+          {job.user_prompt_override && (
+            <div>
+              <p className="mb-2 text-sm font-medium">User Prompt Override</p>
+              <pre className="bg-muted overflow-x-auto rounded-md p-3 text-xs whitespace-pre-wrap">
+                {job.user_prompt_override}
               </pre>
             </div>
           )}

@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
 from typing import Any
-from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class JobCreateRequest(BaseModel):
@@ -54,3 +54,6 @@ class JobDetailResponse(BaseModel):
     total_completion_tokens: int | None = None
     total_tokens: int | None = None
     work_logs: list[WorkLogResponse] | None = None
+    runtime_session_id: str | None = None
+    runtime_provider: str | None = None
+    runtime_status: str | None = None

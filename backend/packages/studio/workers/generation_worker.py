@@ -56,6 +56,11 @@ class GenerationWorker:
 
         try:
             document_id = await self.generation_service.execute_job(job_id)
-            logger.info(f"Job {job_id} completed, document_id: {document_id}")
+            if document_id:
+                logger.info(f"Job {job_id} completed, document_id: {document_id}")
+            else:
+                logger.info(
+                    f"Job {job_id} delegated to runtime facade (async completion)"
+                )
         except Exception as e:
             logger.error(f"Job {job_id} failed: {e}", exc_info=True)

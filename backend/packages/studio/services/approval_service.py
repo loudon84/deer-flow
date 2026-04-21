@@ -186,3 +186,49 @@ class ApprovalService:
             ragflow_status=ragflow_status,
         )
         return documents, total
+
+    async def get_ragflow_status(self, document_id: str) -> dict | None:
+        """获取文档的 RAGFlow 状态"""
+        # 获取文档
+        document = await self.document_repo.find_by_id(document_id)
+        if not document:
+            raise ValueError("Document not found")
+
+        # 查询最新的 RAGFlow 任务
+        tasks = await self.ragflow_task_repo.find_by_document(document_id)
+        if not tasks:
+            return None
+
+        # 返回最新的任务
+        latest_task = tasks[0]
+        return latest_task
+
+    async def retry_ragflow_indexing(self, document_id: str) -> str:
+        """重试 RAGFlow 索引"""
+        # 获取文档
+        document = await self.document_repo.find_by_id(document_id)
+        if not document:
+            raise ValueError("Document not found")
+
+        # 查询最新的失败任务
+        tasks = await self.ragflow_task_repo.find_by_document(document_id)
+        if not tasks:
+            raise ValueError("No RAGFlow task found for this document")
+
+        latest_task = tasks[0]
+        if latest_task["status"] != "failed":
+            raise ValueError("Only failed tasks can be retried")
+
+        # 创建新的重试任务
+        ragflow_task_data = {
+            "documentId": ObjectId(document_id),
+            "documentVersion": document["version"],
+            "knowledgebaseId": latest_task["knowledgebaseId"],
+            "datasetId": latest_task.get("datasetId"),
+        }
+        ragflow_task_id = await self.ragflow_task_repo.create(ragflow_task_data)
+
+        # 更新文档的 RAGFlow 状态
+        await self.document_repo.set_ragflow_queued(document_id)
+
+        return ragflow_task_id

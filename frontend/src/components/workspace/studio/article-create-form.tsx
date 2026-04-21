@@ -31,6 +31,9 @@ export function ArticleCreateForm() {
   const { data: templates } = useTemplates();
   const createJobMutation = useCreateJob();
 
+  // 只显示 active 状态的模板
+  const activeTemplates = templates?.filter(template => template.status === 'active') || [];
+
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     templateIdFromQuery || "",
   );
@@ -38,7 +41,7 @@ export function ArticleCreateForm() {
   const [generationMode, setGenerationMode] = useState("");
   const [systemPromptOverride, setSystemPromptOverride] = useState("");
   const [userPromptOverride, setUserPromptOverride] = useState("");
-  const [inputData, setInputData] = useState("{}");
+  const [inputData, setInputData] = useState<Record<string, string>>({});
 
   const { data: selectedTemplate } = useTemplate(selectedTemplateId);
   const { data: templateVersions } = useTemplateVersions(selectedTemplateId);
@@ -62,28 +65,36 @@ export function ArticleCreateForm() {
     }
   }, [latestVersion]);
 
+  // 从 input_schema 中提取字段名
+  const inputSchemaFields = latestVersion?.input_schema?.properties 
+    ? Object.keys(latestVersion.input_schema.properties)
+    : [];
+
+  // 处理 userPromptOverride 中的模板变量替换
+  const processUserPrompt = (prompt: string, data: Record<string, string>) => {
+    let processed = prompt;
+    Object.entries(data).forEach(([key, value]) => {
+      const placeholder = `{{${key}}}`;
+      // 使用简单的字符串替换，避免正则表达式转义问题
+      processed = processed.split(placeholder).join(value);
+    });
+    return processed;
+  };
+
   const handleCreate = async () => {
     if (!selectedTemplateId) {
       toast.error("Please select a template");
       return;
     }
 
-    let parsedInputData: Record<string, unknown>;
-    try {
-      parsedInputData = JSON.parse(inputData);
-    } catch {
-      toast.error("Invalid JSON in input data");
-      return;
-    }
-
     try {
       const result = await createJobMutation.mutateAsync({
         template_id: selectedTemplateId,
-        input_data: parsedInputData,
+        input_data: inputData,
         model_name: modelName || undefined,
         generation_mode: generationMode || undefined,
         system_prompt_override: systemPromptOverride || undefined,
-        user_prompt_override: userPromptOverride || undefined,
+        user_prompt_override: userPromptOverride ? processUserPrompt(userPromptOverride, inputData) : undefined,
       });
       toast.success("Job created successfully");
       router.push(`/workspace/studio/jobs/${result.id}`);
@@ -107,10 +118,21 @@ export function ArticleCreateForm() {
     );
   }
 
+  if (activeTemplates.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardDescription>
+            No active templates available. Please activate a template first.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create Article</CardTitle>
         <CardDescription>
           Select a template and provide input data to generate an article
         </CardDescription>
@@ -126,7 +148,7 @@ export function ArticleCreateForm() {
               <SelectValue placeholder="Select a template" />
             </SelectTrigger>
             <SelectContent>
-              {templates.map((template) => (
+              {activeTemplates.map((template) => (
                 <SelectItem key={template.id} value={template.id}>
                   {template.name} (v{template.current_version})
                 </SelectItem>
@@ -143,35 +165,24 @@ export function ArticleCreateForm() {
               </label>
               <Input
                 value={modelName}
-                onChange={(e) => setModelName(e.target.value)}
+                readOnly                
                 placeholder={selectedTemplate.default_model_name}
               />
             </div>
-
             <div>
               <label className="mb-2 block text-sm font-medium">
-                Generation Mode
-              </label>
-              <Input
-                value={generationMode}
-                onChange={(e) => setGenerationMode(e.target.value)}
-                placeholder={selectedTemplate.default_generation_mode}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                System Prompt Override (Optional)
+                System Prompt
               </label>
               <Textarea
                 value={systemPromptOverride}
-                onChange={(e) => setSystemPromptOverride(e.target.value)}
-                placeholder={latestVersion?.system_prompt || "Override the default system prompt"}
+                readOnly
+                placeholder={latestVersion?.system_prompt || "No system prompt defined"}
                 rows={3}
+                className="bg-muted cursor-not-allowed"
               />
               {latestVersion?.system_prompt && (
                 <p className="text-muted-foreground text-xs mt-1">
-                  Default from template version {latestVersion.version}
+                  From template version {latestVersion.version} (read-only)
                 </p>
               )}
             </div>
@@ -196,16 +207,22 @@ export function ArticleCreateForm() {
           </>
         )}
 
-        <div>
-          <label className="mb-2 block text-sm font-medium">Input Data</label>
-          <Textarea
-            value={inputData}
-            onChange={(e) => setInputData(e.target.value)}
-            placeholder='{"key": "value"}'
-            rows={5}
-            className="font-mono text-sm"
-          />
-        </div>
+        {inputSchemaFields.length > 0 && (
+          <div className="space-y-3">
+            <label className="block text-sm font-medium">Input Data</label>
+            {inputSchemaFields.map((field) => (
+              <div key={field} className="flex gap-2 items-center">
+                <label className="text-sm font-medium min-w-[120px]">{field}</label>
+                <Input
+                  value={inputData[field] || ""}
+                  onChange={(e) => setInputData({ ...inputData, [field]: e.target.value })}
+                  placeholder={`Enter value for ${field}`}
+                  className="flex-1"
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         <Button
           onClick={handleCreate}
@@ -219,7 +236,7 @@ export function ArticleCreateForm() {
           ) : (
             <>
               <PenTool className="mr-2 h-4 w-4" />
-              Create Article
+              Create
             </>
           )}
         </Button>

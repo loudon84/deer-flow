@@ -99,10 +99,18 @@ export function TemplateDetail({ templateId }: TemplateDetailProps) {
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={() => setCreateDialogOpen(true)}>
+            <Button 
+              onClick={() => setCreateDialogOpen(true)}
+              disabled={template.status !== 'active'}
+            >
               <PenTool className="mr-2 h-4 w-4" />
-              Create Article
+              Create Document
             </Button>
+            {template.status !== 'active' && (
+              <p className="text-muted-foreground text-sm self-center">
+                Only active templates can create documents
+              </p>
+            )}
             <Button variant="outline" asChild>
               <Link href={`/workspace/studio/templates/${template.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" />
@@ -121,11 +129,11 @@ export function TemplateDetail({ templateId }: TemplateDetailProps) {
         </CardContent>
       </Card>
 
-      {/* Create Article Dialog */}
+      {/* Create Document Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="min-w-[800px] max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Create Article</DialogTitle>
+            <DialogTitle>Create Document</DialogTitle>
           </DialogHeader>
           <ArticleCreateForm
             templateId={template.id}

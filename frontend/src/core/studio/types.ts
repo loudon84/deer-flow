@@ -15,6 +15,8 @@ export interface TemplateSummary {
   default_generation_mode: string;
   reasoning_effort?: string | null;
   tags: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface TemplateVersion {
@@ -44,7 +46,13 @@ export interface JobSummary {
   id: string;
   template_id: string;
   template_name?: string;
-  status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+  status:
+    | "queued"
+    | "running"
+    | "waiting_human"
+    | "succeeded"
+    | "failed"
+    | "cancelled";
   document_id?: string | null;
   created_at: string;
   updated_at: string;
@@ -53,12 +61,19 @@ export interface JobSummary {
   total_prompt_tokens?: number;
   total_completion_tokens?: number;
   total_tokens?: number;
+  runtime_session_id?: string | null;
+  runtime_provider?: string | null;
+  runtime_status?: string | null;
 }
 
 export interface JobDetail extends JobSummary {
   input_data?: Record<string, unknown>;
+  input_params?: Record<string, unknown>;
   output_data?: Record<string, unknown>;
   work_logs?: WorkLog[];
+  prompt_override?: string | { system?: string; user?: string };
+  system_prompt_override?: string;
+  user_prompt_override?: string;
 }
 
 export interface DocumentDetail {
@@ -79,6 +94,8 @@ export interface DocumentDetail {
   created_at: string;
   updated_at: string;
   job_id?: string | null;
+  runtime_session_ids?: string[] | null;
+  latest_runtime_session_id?: string | null;
 }
 
 export interface CreateJobPayload {

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { JobDetail } from "@/components/workspace/studio";
+import { JobDetail, RuntimePanel } from "@/components/workspace/studio";
 
 interface JobDetailPageProps {
   params: Promise<{
@@ -40,8 +40,18 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <JobDetail jobId={jobId} />
+      <div className="flex flex-1 flex-col gap-6 overflow-hidden p-6 lg:flex-row">
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+          <JobDetail jobId={jobId} />
+        </div>
+        <aside className="border-border w-full shrink-0 lg:w-[420px] lg:border-l lg:pl-6">          
+          <RuntimePanel
+            ownerType="job"
+            ownerId={jobId}
+            autoCreate
+            mode="job"
+          />
+        </aside>
       </div>
     </div>
   );

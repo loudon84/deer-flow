@@ -1,13 +1,15 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
+
 from studio.api.deps import get_approval_service
 from studio.models.dto import (
+    ApprovalResponse,
+    ApproveDocumentRequest,
     DocumentResponse,
     DocumentUpdateRequest,
-    SubmitApprovalRequest,
-    ApproveDocumentRequest,
-    RejectDocumentRequest,
-    ApprovalResponse,
     OkResponse,
+    RagflowStatusResponse,
+    RejectDocumentRequest,
+    SubmitApprovalRequest,
 )
 from studio.services import ApprovalService
 
@@ -16,6 +18,9 @@ router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
 def _document_to_response(document: dict) -> DocumentResponse:
     """转换文档为响应"""
+    rs_ids = document.get("runtimeSessionIds") or []
+    runtime_session_ids = [str(x) for x in rs_ids] if rs_ids else None
+    latest = document.get("latestRuntimeSessionId")
     return DocumentResponse(
         id=str(document["_id"]),
         title=document["title"],
@@ -25,6 +30,8 @@ def _document_to_response(document: dict) -> DocumentResponse:
         approval_status=document["approvalStatus"],
         ragflow_status=document["ragflowStatus"],
         version=document["version"],
+        runtime_session_ids=runtime_session_ids,
+        latest_runtime_session_id=str(latest) if latest else None,
     )
 
 
@@ -163,3 +170,38 @@ async def get_approval_history(
         document_id, skip=skip, limit=limit
     )
     return [_approval_to_response(a) for a in approvals]
+
+
+@router.get("/{document_id}/ragflow-status", response_model=RagflowStatusResponse)
+async def get_ragflow_status(
+    document_id: str,
+    service: ApprovalService = Depends(get_approval_service),
+):
+    """获取 RAGFlow 状态"""
+    try:
+        task = await service.get_ragflow_status(document_id)
+        if not task:
+            raise HTTPException(status_code=200 , detail="RAGFlow task not found")
+        
+        return RagflowStatusResponse(
+            document_id=document_id,
+            ragflow_status=task["status"],
+            ragflow_document_id=task.get("ragflowDocumentId"),
+            knowledgebase_id=str(task.get("knowledgebaseId", "")) if task.get("knowledgebaseId") else None,
+            last_error=task.get("lastError"),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=200 , detail=str(e))
+
+
+@router.post("/{document_id}/ragflow-retry", response_model=OkResponse)
+async def retry_ragflow_indexing(
+    document_id: str,
+    service: ApprovalService = Depends(get_approval_service),
+):
+    """重试 RAGFlow 索引"""
+    try:
+        await service.retry_ragflow_indexing(document_id)
+        return OkResponse()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -19,6 +19,8 @@ export type BlockNoteEditorProps = {
   editable?: boolean;
   /** 左侧标题目录；默认可见，长文编辑时可快速跳转 */
   showTOC?: boolean;
+  /** 文档内容变更时回调（用于脏状态） */
+  onDocumentChange?: () => void;
 };
 
 type HeadingBlock = {
@@ -106,6 +108,7 @@ export function BlockNoteEditor({
   className,
   editable = true,
   showTOC = true,
+  onDocumentChange,
 }: BlockNoteEditorProps) {
   const editor = useCreateBlockNote({});
   const lastLoadedRef = useRef<string | null>(null);
@@ -120,6 +123,13 @@ export function BlockNoteEditor({
     setHeadings(next);
     setActiveHeadingId(getActiveHeadingId(editor));
   }, [editor, showTOC]);
+
+  const handleChange = useCallback(() => {
+    if (showTOC) {
+      refreshTOC();
+    }
+    onDocumentChange?.();
+  }, [refreshTOC, onDocumentChange, showTOC]);
 
   useEffect(() => {
     editor.isEditable = editable;
@@ -221,7 +231,7 @@ export function BlockNoteEditor({
       filePanel={editable}
       formattingToolbar={editable}
       linkToolbar={editable}
-      onChange={showTOC ? refreshTOC : undefined}
+      onChange={showTOC || onDocumentChange ? handleChange : undefined}
       onSelectionChange={handleSelectionChange}
       sideMenu={editable}
       slashMenu={editable}
