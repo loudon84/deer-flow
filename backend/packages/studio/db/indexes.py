@@ -47,7 +47,6 @@ async def ensure_indexes() -> None:
     await ragflow_tasks.create_index("status")
     await ragflow_tasks.create_index(
         [("documentId", 1), ("documentVersion", 1)],
-        unique=True,
     )
     await ragflow_tasks.create_index("createdAt")
 

@@ -246,3 +246,52 @@ class DeerFlowAdapter(RuntimeAdapter):
                 logger.debug("non-json sse data: %s", raw[:200])
                 return {"parse_error": True, "raw": raw}
         return None
+
+    async def get_artifact_content(
+        self,
+        *,
+        thread_id: str,
+        artifact_path: str,
+    ) -> str | None:
+        """通过 Gateway API 获取 artifact 文件内容。
+
+        Args:
+            thread_id: 线程 ID
+            artifact_path: 虚拟路径，如 "mnt/user-data/outputs/article.md"
+                          （注意：不含前导斜杠，与 Gateway API 路径参数一致）
+
+        Returns:
+            文件内容字符串，如果文件不存在或获取失败则返回 None
+        """
+        # Gateway API: GET /api/threads/{thread_id}/artifacts/{path}
+        url = f"{self.base_url}/api/threads/{thread_id}/artifacts/{artifact_path}"
+        async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+            try:
+                resp = await client.get(url)
+                if resp.status_code == 404:
+                    return None
+                resp.raise_for_status()
+                return resp.text
+            except httpx.HTTPError as e:
+                logger.warning("Failed to fetch artifact %s: %s", artifact_path, e)
+                return None
+
+    async def list_output_artifacts(
+        self,
+        *,
+        thread_id: str,
+    ) -> list[str]:
+        """获取 thread state 中的 artifacts 列表。
+
+        从 thread state 的 values.artifacts 中提取文件路径列表。
+
+        Args:
+            thread_id: 线程 ID
+
+        Returns:
+            artifacts 路径列表，如 ["/mnt/user-data/outputs/article.md", ...]
+        """
+        state = await self.get_thread_state(thread_id=thread_id)
+        values = state.get("values") or {}
+        artifacts = values.get("artifacts") or []
+        return artifacts if isinstance(artifacts, list) else []

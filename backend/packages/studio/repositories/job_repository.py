@@ -89,13 +89,13 @@ class JobRepository:
         """设置任务为运行中"""
         return await self.update_status(job_id, JOB_STATUS_RUNNING)
 
-    async def set_succeeded(self, job_id: str, document_id: str) -> bool:
+    async def set_succeeded(self, job_id: str, document_id: str | None) -> bool:
         """设置任务为成功"""
-        if not ObjectId.is_valid(document_id):
-            return False
-        return await self.update_status(
-            job_id, JOB_STATUS_SUCCEEDED, {"documentId": ObjectId(document_id)}
-        )
+        if document_id and ObjectId.is_valid(document_id):
+            return await self.update_status(
+                job_id, JOB_STATUS_SUCCEEDED, {"documentId": ObjectId(document_id)}
+            )
+        return await self.update_status(job_id, JOB_STATUS_SUCCEEDED)
 
     async def set_failed(self, job_id: str, error: str) -> bool:
         """设置任务为失败"""

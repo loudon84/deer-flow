@@ -12,6 +12,7 @@ class DocumentResponse(BaseModel):
     approval_status: str
     ragflow_status: str
     version: int
+    job_id: str | None = None
     runtime_session_ids: list[str] | None = None
     latest_runtime_session_id: str | None = None
 

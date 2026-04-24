@@ -113,6 +113,9 @@ class RuntimeFacadeService:
         if not session:
             return
         assert self.adapter is not None
+
+        run_end_received = False  # 追踪是否收到 run_end 事件
+
         try:
             async for frame in self.adapter.start_run_stream(
                 thread_id=session["threadId"],
@@ -142,17 +145,46 @@ class RuntimeFacadeService:
                         return
 
                     if portal_event["event_type"] == RUNTIME_EVENT_RUN_END:
-                        await self.session_service.mark_completed(session_id)
-                        mat = await self.result_service.materialize_latest_result(session_id)
-                        if mat and session.get("ownerType") == OWNER_TYPE_JOB:
-                            await self.result_service.persist_job_success_document(
-                                session_id,
-                                job_id=session["ownerId"],
-                                result=mat,
-                            )
+                        run_end_received = True
+                        await self._handle_run_completion(session_id, session)
                         return
+
+            # SSE 流正常结束但未收到 run_end 事件 — 兜底处理
+            if not run_end_received:
+                logger.warning("SSE stream ended without run_end event for session %s", session_id)
+                # 重新获取 session（可能已被更新）
+                session = await self.session_service.get_by_id(session_id)
+                if session and session.get("status") == "streaming":
+                    await self._handle_run_completion(session_id, session)
+
         except Exception as e:
             logger.exception("consume_run failed: %s", e)
             await self.session_service.mark_failed(session_id, str(e))
             if session.get("ownerType") == OWNER_TYPE_JOB:
                 await self.session_service.job_repo.set_failed(session["ownerId"], str(e))
+
+    async def _handle_run_completion(self, session_id: str, session: dict) -> None:
+        """处理 run 完成（无论是收到 run_end 还是 SSE 流结束的兜底）"""
+        await self.session_service.mark_completed(session_id)
+        
+        # 物化消息结果（用于 chat 页面显示）
+        mat = await self.result_service.materialize_latest_result(session_id)
+        
+        # 获取真实的 output artifacts 内容（用于最终文档）
+        artifacts_result = await self.result_service.get_output_artifacts_content(session_id)
+        
+        if session.get("ownerType") == OWNER_TYPE_JOB:
+            if artifacts_result:
+                # 有真实文件才持久化到文档
+                await self.result_service.persist_job_success_document(
+                    session_id,
+                    job_id=session["ownerId"],
+                    result=artifacts_result,
+                )
+            else:
+                # 没有生成文件，标记 Job 成功但不关联文档
+                logger.info(
+                    "No output artifacts found for job %s, marking succeeded without document",
+                    session["ownerId"],
+                )
+                await self.session_service.job_repo.set_succeeded(session["ownerId"], None)

@@ -24,6 +24,14 @@ class RagflowIngestionService:
         if not task:
             raise ValueError("Task not found")
 
+        # 检查 knowledgebaseId 是否存在
+        knowledgebase_id = task.get("knowledgebaseId")
+        if not knowledgebase_id:
+            raise ValueError(
+                f"Task {task_id} missing knowledgebaseId. "
+                "Please ensure the document was approved with a valid knowledgebase_id parameter."
+            )
+
         # 获取文档
         document = await self.document_repo.find_by_id(str(task["documentId"]))
         if not document:
@@ -36,14 +44,24 @@ class RagflowIngestionService:
         try:
             # 调用 RAGFlow API 上传文档
             result = await self.ragflow_client.upload_document(
-                knowledgebase_id=task["knowledgebaseId"],
+                knowledgebase_id=knowledgebase_id,
                 document_name=document["title"],
                 content=document["contentMarkdown"],
                 dataset_id=task.get("datasetId"),
             )
 
-            # 获取 RAGFlow 文档 ID
-            ragflow_document_id = result.get("id") or result.get("document_id")
+            # 检查响应状态
+            if result and result.get('code') == 0:
+                # RAGFlow v0.24.0 响应格式: {"code": 0, "data": [{"id": "...", ...}]}
+                if "data" in result and isinstance(result["data"], list) and len(result["data"]) > 0:
+                    ragflow_document_id = result["data"][0].get("id")
+                else:
+                    raise ValueError(f"无法从响应中获取文档 ID: {result}")
+            else:
+                raise ValueError(f"RAGFlow 上传失败: {result.get('message', '未知错误')}")
+
+            if not ragflow_document_id:
+                raise ValueError(f"无法获取文档 ID: {result}")
 
             # 更新任务状态
             await self.ragflow_task_repo.set_indexed(task_id, ragflow_document_id)

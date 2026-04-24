@@ -110,3 +110,39 @@ class RuntimeSessionRepository:
         if not result:
             return None
         return int((result.get("summary") or {}).get("lastEventSeq", 0))
+
+    async def find_by_status(self, status: str, limit: int = 100) -> list[dict]:
+        """查询指定状态的所有 session"""
+        cursor = self.collection.find({"status": status}).sort("updatedAt", 1).limit(limit)
+        return await cursor.to_list(length=limit)
+
+    async def find_stuck_sessions(
+        self,
+        status: str = "streaming",
+        timeout_seconds: int = 300,
+        limit: int = 100,
+    ) -> list[dict]:
+        """查询卡住的 session（状态为 streaming 但超过指定时间未更新）"""
+        cutoff = datetime.utcnow() - __import__("datetime").timedelta(seconds=timeout_seconds)
+        cursor = (
+            self.collection.find({
+                "status": status,
+                "updatedAt": {"$lt": cutoff},
+            })
+            .sort("updatedAt", 1)
+            .limit(limit)
+        )
+        return await cursor.to_list(length=limit)
+
+    async def find_by_owner_type(
+        self,
+        owner_type: str,
+        status: str | None = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """按 owner 类型查询 session"""
+        query: dict = {"ownerType": owner_type}
+        if status:
+            query["status"] = status
+        cursor = self.collection.find(query).sort("updatedAt", -1).limit(limit)
+        return await cursor.to_list(length=limit)

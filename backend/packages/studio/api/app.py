@@ -14,12 +14,15 @@ from studio.api.router_runtime_sessions import router as runtime_sessions_router
 from studio.api.router_templates import router as templates_router
 from studio.settings import StudioSettings
 from studio.workers.generation_worker import GenerationWorker
+from studio.workers.ragflow_ingestion_worker import RagflowIngestionWorker
 
 logger = logging.getLogger(__name__)
 
 # 全局引用，供 lifespan 管理
 _worker: GenerationWorker | None = None
 _worker_task: "asyncio.Task | None" = None
+_ragflow_worker: RagflowIngestionWorker | None = None
+_ragflow_worker_task: "asyncio.Task | None" = None
 
 
 @asynccontextmanager
@@ -27,9 +30,11 @@ async def lifespan(app: FastAPI):
     """应用生命周期：启动时拉起 Worker 协程，关闭时优雅停止。"""
     import asyncio
 
-    global _worker, _worker_task
+    global _worker, _worker_task, _ragflow_worker, _ragflow_worker_task
 
     settings = StudioSettings()
+
+    # 启动 GenerationWorker
     if settings.worker_poll_seconds > 0:
         _worker = GenerationWorker()
         _worker_task = asyncio.create_task(_worker.start())
@@ -37,9 +42,18 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("GenerationWorker disabled (worker_poll_seconds=0)")
 
+    # 启动 RAGFlow Ingestion Worker
+    if settings.ragflow_worker_poll_seconds > 0:
+        _ragflow_worker = RagflowIngestionWorker()
+        _ragflow_worker_task = asyncio.create_task(_ragflow_worker.start())
+        logger.info("RAGFlow Ingestion Worker started (in-process)")
+    else:
+        logger.info("RAGFlow Ingestion Worker disabled (ragflow_worker_poll_seconds=0)")
+
     yield  # app 运行中
 
-    # 关闭：优雅停止 Worker
+    # 关闭：优雅停止 Workers
+    # 停止 GenerationWorker
     if _worker is not None:
         _worker.stop()
     if _worker_task is not None:
@@ -49,6 +63,17 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
     logger.info("GenerationWorker stopped")
+
+    # 停止 RAGFlow Ingestion Worker
+    if _ragflow_worker is not None:
+        _ragflow_worker.stop()
+    if _ragflow_worker_task is not None:
+        _ragflow_worker_task.cancel()
+        try:
+            await _ragflow_worker_task
+        except asyncio.CancelledError:
+            pass
+    logger.info("RAGFlow Ingestion Worker stopped")
 
 
 def create_app() -> FastAPI:

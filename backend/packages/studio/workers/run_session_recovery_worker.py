@@ -1,7 +1,18 @@
+#!/usr/bin/env python3
+"""
+启动 Session Recovery Worker
+
+用法:
+    python -m studio.workers.run_session_recovery_worker
+    或
+    python run_session_recovery_worker.py
+"""
+
 import asyncio
 import logging
 import sys
-from studio.workers.generation_worker import GenerationWorker
+
+from studio.workers.session_recovery_worker import SessionRecoveryWorker
 
 # 配置日志
 logging.basicConfig(
@@ -13,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 async def main():
-    """运行 Generation Worker"""
-    worker = GenerationWorker()
+    """运行 Session Recovery Worker"""
+    worker = SessionRecoveryWorker()
 
     # Windows 不支持 add_signal_handler，使用 try/except 处理
     if sys.platform != "win32":
@@ -35,7 +46,7 @@ async def main():
         logger.info("Received KeyboardInterrupt")
         worker.stop()
     except Exception as e:
-        logger.error(f"Worker failed: {e}", exc_info=True)
+        logger.error("Worker failed: %s", e, exc_info=True)
     finally:
         logger.info("Worker stopped")
 

@@ -21,6 +21,7 @@ def _document_to_response(document: dict) -> DocumentResponse:
     rs_ids = document.get("runtimeSessionIds") or []
     runtime_session_ids = [str(x) for x in rs_ids] if rs_ids else None
     latest = document.get("latestRuntimeSessionId")
+    job_id = document.get("jobId")
     return DocumentResponse(
         id=str(document["_id"]),
         title=document["title"],
@@ -30,6 +31,7 @@ def _document_to_response(document: dict) -> DocumentResponse:
         approval_status=document["approvalStatus"],
         ragflow_status=document["ragflowStatus"],
         version=document["version"],
+        job_id=str(job_id) if job_id else None,
         runtime_session_ids=runtime_session_ids,
         latest_runtime_session_id=str(latest) if latest else None,
     )

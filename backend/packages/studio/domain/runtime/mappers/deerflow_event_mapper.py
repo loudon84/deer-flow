@@ -63,10 +63,15 @@ class DeerFlowEventMapper:
         if raw == "[DONE]":
             return {"sse_event": "end", "event_type": RUNTIME_EVENT_RUN_END, "source": "system", "payload": {}}
 
+        # 特殊处理：sse_event == "end" 时，无论 data 内容如何，都返回 run_end
+        # DeerFlow Gateway 发送格式: event: end\ndata: null\n\n
+        if sse_event == "end":
+            return {"sse_event": "end", "event_type": RUNTIME_EVENT_RUN_END, "source": "system", "payload": {}}
+
         # 按 sse_event 类型过滤：只保留需要持久化的类型
         if sse_event and sse_event not in _PERSIST_SSE_EVENTS:
-            # 特殊处理：error 和 end 类型虽然不在 _PERSIST_SSE_EVENTS 中，但需要保留
-            if sse_event not in ("error", "end"):
+            # 特殊处理：error 类型虽然不在 _PERSIST_SSE_EVENTS 中，但需要保留
+            if sse_event not in ("error",):
                 return None
 
         # 解析 JSON
