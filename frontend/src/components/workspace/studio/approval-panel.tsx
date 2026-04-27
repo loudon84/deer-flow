@@ -9,6 +9,7 @@ import { Check, X, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useDocument,
@@ -18,11 +19,15 @@ import {
 } from "@/core/studio";
 import { toast } from "sonner";
 
+type OperationType = "document" | "publish" | "read";
+
 interface ApprovalPanelProps {
   documentId: string;
+  /** 操作类型，控制用户可执行的操作 */
+  operationType?: OperationType;
 }
 
-export function ApprovalPanel({ documentId }: ApprovalPanelProps) {
+export function ApprovalPanel({ documentId, operationType = "read" }: ApprovalPanelProps) {
   const { data: document } = useDocument(documentId);
   const submitMutation = useSubmitApproval();
   const approveMutation = useApproveDocument();
@@ -30,6 +35,7 @@ export function ApprovalPanel({ documentId }: ApprovalPanelProps) {
 
   const [comment, setComment] = useState("");
   const [rejectReason, setRejectReason] = useState("");
+  const [knowledgebaseId, setKnowledgebaseId] = useState("");
 
   const handleSubmitApproval = async () => {
     try {
@@ -45,13 +51,21 @@ export function ApprovalPanel({ documentId }: ApprovalPanelProps) {
   };
 
   const handleApprove = async () => {
+    if (!knowledgebaseId.trim()) {
+      toast.error("Please provide a knowledgebase ID");
+      return;
+    }
     try {
       await approveMutation.mutateAsync({
         documentId,
-        payload: { comment: comment || undefined },
+        payload: {
+          comment: comment || undefined,
+          knowledgebase_id: knowledgebaseId,
+        },
       });
       toast.success("Document approved");
       setComment("");
+      setKnowledgebaseId("");
     } catch (error) {
       toast.error("Failed to approve document");
     }
@@ -76,6 +90,10 @@ export function ApprovalPanel({ documentId }: ApprovalPanelProps) {
 
   if (!document) return null;
 
+  // 根据操作类型判断是否有权限执行操作
+  const canSubmitApproval = operationType === "document";
+  const canApproveOrReject = operationType === "publish";
+
   return (
     <Card>
       <CardHeader>
@@ -97,50 +115,72 @@ export function ApprovalPanel({ documentId }: ApprovalPanelProps) {
               placeholder="Add a comment (optional)"
               rows={2}
             />
-            <Button
-              onClick={handleSubmitApproval}
-              disabled={submitMutation.isPending}
-            >
-              <Send className="mr-2 h-4 w-4" />
-              Submit for Approval
-            </Button>
+            {canSubmitApproval && (
+              <Button
+                onClick={handleSubmitApproval}
+                disabled={submitMutation.isPending}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                Submit for Approval
+              </Button>
+            )}
           </div>
         )}
 
         {document.approval_status === "pending_approval" && (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Add a comment (optional)"
-                rows={2}
-              />
-              <Button
-                onClick={handleApprove}
-                disabled={approveMutation.isPending}
-              >
-                <Check className="mr-2 h-4 w-4" />
-                Approve
-              </Button>
-            </div>
+            {canApproveOrReject && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Knowledgebase ID <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={knowledgebaseId}
+                    onChange={(e) => setKnowledgebaseId(e.target.value)}
+                    placeholder="Enter RAGFlow knowledgebase ID"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Textarea
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Reason for rejection (required)"
-                rows={2}
-              />
-              <Button
-                onClick={handleReject}
-                disabled={rejectMutation.isPending}
-                variant="destructive"
-              >
-                <X className="mr-2 h-4 w-4" />
-                Reject
-              </Button>
-            </div>
+                <div className="space-y-2">
+                  <Textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Add a comment (optional)"
+                    rows={2}
+                  />
+                  <Button
+                    onClick={handleApprove}
+                    disabled={approveMutation.isPending}
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Approve
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder="Reason for rejection (required)"
+                    rows={2}
+                  />
+                  <Button
+                    onClick={handleReject}
+                    disabled={rejectMutation.isPending}
+                    variant="destructive"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Reject
+                  </Button>
+                </div>
+              </>
+            )}
+            {!canApproveOrReject && (
+              <p className="text-muted-foreground text-sm">
+                Waiting for approval.
+              </p>
+            )}
           </div>
         )}
 

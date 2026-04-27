@@ -8,6 +8,7 @@ import {
   ListTodo,
   MessagesSquare,
   PenTool,
+  Send,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -51,7 +52,12 @@ export function WorkspaceNavChatList() {
       href: "/workspace/studio/jobs",
       isActive: pathname.startsWith("/workspace/studio/jobs"),
     },
-    
+    {
+      icon: Send,
+      label: "Publishing",
+      href: "/workspace/studio/publishing",
+      isActive: pathname.startsWith("/workspace/studio/publishing"),
+    },
   ];
 
   return (

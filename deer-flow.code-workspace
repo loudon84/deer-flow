@@ -13,7 +13,9 @@
         "workspace": "deer-flow"
       }
     ],
-    "diffEditor.renderSideBySide": false
+    "diffEditor.renderSideBySide": false,
+    "clawMode.mode": "editor",
+    "workbench.activityBar.location": "default"
   },
   "launch": {
     "version": "0.2.0",

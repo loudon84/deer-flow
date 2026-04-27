@@ -4,7 +4,7 @@
 
 "use client";
 
-import { FileText, Layers, ListTodo, PenTool } from "lucide-react";
+import { FileText, Layers, ListTodo, PenTool, Send } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -42,6 +42,12 @@ export function StudioNav() {
       label: "Documents",
       href: "/workspace/studio/documents",
       isActive: pathname.startsWith("/workspace/studio/documents"),
+    },
+    {
+      icon: Send,
+      label: "Publishing",
+      href: "/workspace/studio/publishing",
+      isActive: pathname.startsWith("/workspace/studio/publishing"),
     },
   ];
 

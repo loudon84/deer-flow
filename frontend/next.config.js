@@ -15,8 +15,8 @@ import nextra from "nextra";
 const withNextra = nextra({});
 
 // For local development without Nginx
-const LOCAL_LANGGRAPH_URL = "http://192.168.70.166:2024";
-const LOCAL_GATEWAY_URL = "http://192.168.70.166:8001";
+const LOCAL_LANGGRAPH_URL = "http://localhost:2024";
+const LOCAL_GATEWAY_URL = "http://localhost:8001";
 const LOCAL_STUDIO_URL = "http://localhost:8320";
 
 
@@ -27,6 +27,15 @@ const config = {
     defaultLocale: "en",
   },
   devIndicators: false,
+  allowedDevOrigins: [
+    "http://192.168.*:2026"
+  ],
+  // Allow external access in development mode
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["*"],
+    },
+  },
   async rewrites() {
     const rewrites = [];
     

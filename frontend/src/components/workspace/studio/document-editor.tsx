@@ -118,10 +118,29 @@ export function DocumentEditor({ documentId, onDirtyChange }: DocumentEditorProp
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-10">
+    <div className="grid gap-2 lg:grid-cols-2">
       {/* Left panel - 7/10 */}
       <div className="lg:col-span-7">
         <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Document title"
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSave}
+                disabled={updateMutation.isPending}
+                size="sm"
+                className="min-w-[25%]"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save
+              </Button>
+            </div>
+          </CardHeader>
           <CardContent>
             <div className="border-input min-h-[400px]">
               <BlockNoteEditorDynamic
@@ -137,6 +156,7 @@ export function DocumentEditor({ documentId, onDirtyChange }: DocumentEditorProp
         </Card>
       </div>
       {/* Right panel - 3/10 */}
+      {/*
       <div className="lg:col-span-3">
         <Card>
           <CardHeader>
@@ -188,6 +208,7 @@ export function DocumentEditor({ documentId, onDirtyChange }: DocumentEditorProp
           </CardContent>
         </Card>
       </div>
+      */}
     </div>
   );
 }

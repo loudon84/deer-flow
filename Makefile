@@ -1,6 +1,6 @@
 # DeerFlow - Unified Development Environment
 
-.PHONY: help config config-upgrade check install dev dev-daemon start stop up down clean docker-init docker-start docker-stop docker-logs docker-logs-frontend docker-logs-gateway
+.PHONY: help config config-upgrade check install dev dev-studio dev-daemon start stop up down clean docker-init docker-start docker-stop docker-logs docker-logs-frontend docker-logs-gateway
 
 BASH ?= bash
 
@@ -20,6 +20,7 @@ help:
 	@echo "  make install         - Install all dependencies (frontend + backend)"
 	@echo "  make setup-sandbox   - Pre-pull sandbox container image (recommended)"
 	@echo "  make dev             - Start all services in development mode (with hot-reloading)"
+	@echo "  make dev-studio      - Start all services with Studio in development mode"
 	@echo "  make dev-daemon      - Start all services in background (daemon mode)"
 	@echo "  make start           - Start all services in production mode (optimized, no hot-reloading)"
 	@echo "  make stop            - Stop all running services"
@@ -103,6 +104,15 @@ ifeq ($(OS),Windows_NT)
 	@call scripts\run-with-git-bash.cmd ./scripts/serve.sh --dev
 else
 	@./scripts/serve.sh --dev
+endif
+
+# Start all services with Studio in development mode
+dev-studio:
+	@$(PYTHON) ./scripts/check.py
+ifeq ($(OS),Windows_NT)
+	@call scripts\run-with-git-bash.cmd ./scripts/serve-with-studio.sh --dev
+else
+	@./scripts/serve-with-studio.sh --dev
 endif
 
 # Start all services in production mode (with optimizations)

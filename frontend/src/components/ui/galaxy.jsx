@@ -200,11 +200,13 @@ export default function Galaxy({
     const ctn = ctnDom.current;
 
     let renderer;
+    let gl;
     try {
       renderer = new Renderer({
         alpha: transparent,
         premultipliedAlpha: false,
       });
+      gl = renderer.gl;
     } catch (error) {
       console.warn(
         "Galaxy: WebGL is not available. The galaxy background will not be rendered.",
@@ -213,7 +215,6 @@ export default function Galaxy({
       return;
     }
 
-    const gl = renderer.gl;
     if (!gl) {
       console.warn(
         "Galaxy: WebGL context is null. The galaxy background will not be rendered.",
@@ -335,8 +336,10 @@ export default function Galaxy({
         ctn.removeEventListener("mousemove", handleMouseMove);
         ctn.removeEventListener("mouseleave", handleMouseLeave);
       }
-      ctn.removeChild(gl.canvas);
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      if (gl?.canvas && ctn.contains(gl.canvas)) {
+        ctn.removeChild(gl.canvas);
+      }
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
     };
   }, [
     focal,

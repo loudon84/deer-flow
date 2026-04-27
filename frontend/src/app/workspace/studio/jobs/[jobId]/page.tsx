@@ -7,7 +7,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { JobDetail, RuntimePanel } from "@/components/workspace/studio";
+import { JobDetail } from "@/components/workspace/studio";
+import { StudioChatPanel } from "@/components/workspace/studio/chat";
 
 interface JobDetailPageProps {
   params: Promise<{
@@ -44,12 +45,11 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
           <JobDetail jobId={jobId} />
         </div>
-        <aside className="border-border w-full shrink-0 lg:w-[420px] lg:border-l lg:pl-6">          
-          <RuntimePanel
+        <aside className="border-border w-full shrink-0 lg:w-[420px] lg:border-l lg:pl-6">
+          <StudioChatPanel
             ownerType="job"
             ownerId={jobId}
             autoCreate
-            mode="job"
           />
         </aside>
       </div>

@@ -121,6 +121,8 @@ export interface SubmitApprovalPayload {
 
 export interface ApproveDocumentPayload {
   comment?: string;
+  knowledgebase_id: string;
+  dataset_id?: string;
 }
 
 export interface RejectDocumentPayload {

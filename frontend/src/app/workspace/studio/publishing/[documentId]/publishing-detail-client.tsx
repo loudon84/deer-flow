@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CheckCircle, Database } from "lucide-react";
+import { ArrowLeft, CheckCircle, Database, Upload } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 
@@ -17,21 +17,23 @@ import {
   RAGFlowStatusCard,
 } from "@/components/workspace/studio";
 import { StudioChatPanel } from "@/components/workspace/studio/chat";
+import { PublishDialog } from "@/components/publish/publish-dialog";
 import { getDocument } from "@/core/studio/api/documents";
 import type { ApplyMode } from "@/core/studio/types/runtime";
 import { useQuery } from "@tanstack/react-query";
 
-export function DocumentDetailClient({ documentId }: { documentId: string }) {
+export function PublishingDetailClient({ documentId }: { documentId: string }) {
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [ragflowDialogOpen, setRagflowDialogOpen] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [editorDirty, setEditorDirty] = useState(false);
 
-  // 查询 Document 获取 job_id，用于 Chat Panel 的 owner
+  // 查询 Document 获取 job_id 和内容
   const { data: document } = useQuery({
     queryKey: ["article-studio", "documents", documentId],
     queryFn: () => getDocument(documentId),
   });
-  
+
   // 优先使用 job_id 作为 ownerId，复用 Job 的 Session/Thread
   // 如果没有 job_id（手动创建的文档），则 fallback 到 documentId
   const chatOwnerId = document?.job_id ?? documentId;
@@ -52,7 +54,7 @@ export function DocumentDetailClient({ documentId }: { documentId: string }) {
       <div className="flex items-center justify-between border-b px-6 py-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/workspace/studio/documents">
+            <Link href="/workspace/studio/publishing">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
@@ -76,6 +78,14 @@ export function DocumentDetailClient({ documentId }: { documentId: string }) {
           >
             <Database className="mr-1.5 h-4 w-4" />
             RAGFlow
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPublishDialogOpen(true)}
+          >
+            <Upload className="mr-1.5 h-4 w-4" />
+            Publish
           </Button>
         </div>
       </div>
@@ -107,7 +117,7 @@ export function DocumentDetailClient({ documentId }: { documentId: string }) {
           <DialogHeader>
             <DialogTitle>Approval</DialogTitle>
           </DialogHeader>
-          <ApprovalPanel documentId={documentId} operationType='document' />
+          <ApprovalPanel documentId={documentId} operationType='publish' />
         </DialogContent>
       </Dialog>
 
@@ -119,6 +129,14 @@ export function DocumentDetailClient({ documentId }: { documentId: string }) {
           <RAGFlowStatusCard documentId={documentId} />
         </DialogContent>
       </Dialog>
+
+      {/* 发布对话框 */}
+      <PublishDialog
+        open={publishDialogOpen}
+        onOpenChange={setPublishDialogOpen}
+        markdown={document?.content_markdown ?? ""}
+        title={document?.title}
+      />
     </div>
   );
 }

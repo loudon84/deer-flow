@@ -1,5 +1,15 @@
 import os
+import sys
 from pathlib import Path
+
+# Ensure the studio package is importable regardless of the working directory.
+# When running from studio/, the parent directory needs to be on sys.path
+# so that `import studio` resolves correctly.
+_STUDIO_PKG_DIR = str(Path(__file__).resolve().parent)
+_PARENT_DIR = str(Path(__file__).resolve().parent.parent)
+if _PARENT_DIR not in sys.path:
+    sys.path.insert(0, _PARENT_DIR)
+
 import uvicorn
 from studio.api import app
 from studio.settings import StudioSettings
@@ -29,8 +39,8 @@ def load_env_file(env_path: Path) -> None:
 
 def main():
     """启动 Article Studio API 服务"""
-    # 加载 .env 文件
-    env_path = Path(__file__).parent.parent.parent / ".env"
+    # 加载 .env 文件 (studio 在 deer-flow 根目录下，所以 .env 在父目录)
+    env_path = Path(__file__).parent.parent / ".env"
     print(f"Loading .env from: {env_path}")
     print(f".env file exists: {env_path.exists()}")
     load_env_file(env_path)

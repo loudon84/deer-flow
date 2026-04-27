@@ -7,10 +7,9 @@ import os
 
 # 添加项目路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.dirname(os.path.dirname(current_dir))
-sys.path.insert(0, backend_dir)
+sys.path.insert(0, current_dir)
 
-from packages.studio.integrations.ragflow_client import RagflowClient
+from integrations.ragflow_client import RagflowClient
 
 
 async def test_fixed_client():
