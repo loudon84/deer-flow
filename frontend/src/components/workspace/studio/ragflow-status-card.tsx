@@ -69,6 +69,9 @@ export function RAGFlowStatusCard({ documentId }: RAGFlowStatusCardProps) {
     );
   }
 
+  const ragflowStatus = status.ragflow_status ?? "unknown";
+  const statusColor = statusColors[ragflowStatus] ?? "bg-gray-400";
+
   return (
     <Card>
       <CardHeader>
@@ -79,10 +82,10 @@ export function RAGFlowStatusCard({ documentId }: RAGFlowStatusCardProps) {
         <CardDescription>
           <span className="flex items-center gap-2">
             <span
-              className={`h-2 w-2 rounded-full ${statusColors[status.ragflow_status]}`}
+              className={`h-2 w-2 rounded-full ${statusColor}`}
             />
             <span className="capitalize">
-              {status.ragflow_status.replace("_", " ")}
+              {ragflowStatus.replaceAll("_", " ")}
             </span>
           </span>
         </CardDescription>
@@ -109,8 +112,7 @@ export function RAGFlowStatusCard({ documentId }: RAGFlowStatusCardProps) {
           </div>
         )}
 
-        {(status.ragflow_status === "failed" ||
-          status.ragflow_status === "stale") && (
+        {(ragflowStatus === "failed" || ragflowStatus === "stale") && (
           <Button
             onClick={handleRetry}
             disabled={retryMutation.isPending}

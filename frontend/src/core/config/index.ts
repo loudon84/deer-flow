@@ -18,6 +18,20 @@ export function getBackendBaseURL() {
   }
 }
 
+/**
+ * Article Studio REST（Mongo /jobs /templates 等）基地址。
+ * 不要复用 NEXT_PUBLIC_BACKEND_BASE_URL：后者通常是 DeerFlow Gateway（8001），没有 Studio 路由。
+ * 不设 NEXT_PUBLIC_ARTICLE_STUDIO_BASE_URL 时返回空字符串，使用同源 `/api/v1`，由 Next rewrites 转发到 Studio。
+ */
+export function getArticleStudioBaseURL() {
+  if (env.NEXT_PUBLIC_ARTICLE_STUDIO_BASE_URL) {
+    return new URL(env.NEXT_PUBLIC_ARTICLE_STUDIO_BASE_URL, getBaseOrigin())
+      .toString()
+      .replace(/\/+$/, "");
+  }
+  return "";
+}
+
 export function getLangGraphBaseURL(isMock?: boolean) {
   if (env.NEXT_PUBLIC_LANGGRAPH_BASE_URL) {
     return new URL(

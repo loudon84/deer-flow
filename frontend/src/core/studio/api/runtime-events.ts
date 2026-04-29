@@ -2,7 +2,7 @@
  * Runtime events API + SSE
  */
 
-import { getBackendBaseURL } from "@/core/config";
+import { getArticleStudioBaseURL } from "@/core/config";
 
 import type {
   RuntimeEvent,
@@ -43,7 +43,7 @@ export async function listRuntimeEvents(
   cursor = 0,
   limit = 100,
 ): Promise<RuntimeEventListResponse> {
-  const base = getBackendBaseURL() || "";
+  const base = getArticleStudioBaseURL();
   const q = new URLSearchParams({
     cursor: String(cursor),
     limit: String(limit),
@@ -77,7 +77,7 @@ export function openRuntimeEventStream(
   onError?: () => void,
   onDone?: (status: string) => void,
 ): () => void {
-  const base = getBackendBaseURL() || "";
+  const base = getArticleStudioBaseURL();
   const url = `${base}/api/v1/runtime/sessions/${encodeURIComponent(sessionId)}/stream`;
 
   const es = new EventSource(url);

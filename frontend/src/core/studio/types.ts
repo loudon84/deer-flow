@@ -125,6 +125,11 @@ export interface ApproveDocumentPayload {
   dataset_id?: string;
 }
 
+export interface RagflowDataset {
+  id: string;
+  name: string;
+}
+
 export interface RejectDocumentPayload {
   reason: string;
 }

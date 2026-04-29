@@ -9,6 +9,7 @@ import type {
   SubmitApprovalPayload,
   ApproveDocumentPayload,
   RejectDocumentPayload,
+  RagflowDataset,
   RAGFlowStatus,
 } from "../types";
 
@@ -73,5 +74,11 @@ export function getRagflowStatus(documentId: string) {
 export function retryRagflow(documentId: string) {
   return articleStudioClient.post<{ ok: true }>(
     `/api/v1/documents/${documentId}/ragflow-retry`,
+  );
+}
+
+export function listRagflowDatasets() {
+  return articleStudioClient.get<RagflowDataset[]>(
+    "/api/v1/documents/ragflow-datasets",
   );
 }

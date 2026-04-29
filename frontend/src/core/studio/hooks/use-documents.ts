@@ -14,6 +14,7 @@ import {
   rejectDocument,
   getRagflowStatus,
   retryRagflow,
+  listRagflowDatasets,
 } from "../api/documents";
 import type {
   UpdateDocumentPayload,
@@ -126,5 +127,12 @@ export function useRetryRagflow() {
         queryKey: ["article-studio", "documents", documentId, "ragflow-status"],
       });
     },
+  });
+}
+
+export function useRagflowDatasets() {
+  return useQuery({
+    queryKey: ["article-studio", "ragflow-datasets"],
+    queryFn: listRagflowDatasets,
   });
 }

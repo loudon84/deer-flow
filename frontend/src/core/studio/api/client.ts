@@ -3,13 +3,13 @@
  * REST client for Article Studio endpoints
  */
 
-import { getBackendBaseURL } from "@/core/config";
+import { getArticleStudioBaseURL } from "@/core/config";
 
 async function request<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const base = getBackendBaseURL() || "";
+  const base = getArticleStudioBaseURL();
   const res = await fetch(`${base}${path}`, {
     ...init,
     headers: {

@@ -9,13 +9,20 @@ import { Check, X, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useDocument,
   useSubmitApproval,
   useApproveDocument,
   useRejectDocument,
+  useRagflowDatasets,
 } from "@/core/studio";
 import { toast } from "sonner";
 
@@ -32,6 +39,7 @@ export function ApprovalPanel({ documentId, operationType = "read" }: ApprovalPa
   const submitMutation = useSubmitApproval();
   const approveMutation = useApproveDocument();
   const rejectMutation = useRejectDocument();
+  const ragflowDatasetsQuery = useRagflowDatasets();
 
   const [comment, setComment] = useState("");
   const [rejectReason, setRejectReason] = useState("");
@@ -135,11 +143,30 @@ export function ApprovalPanel({ documentId, operationType = "read" }: ApprovalPa
                   <label className="text-sm font-medium">
                     Knowledgebase ID <span className="text-red-500">*</span>
                   </label>
-                  <Input
+                  <Select
                     value={knowledgebaseId}
-                    onChange={(e) => setKnowledgebaseId(e.target.value)}
-                    placeholder="Enter RAGFlow knowledgebase ID"
-                  />
+                    onValueChange={setKnowledgebaseId}
+                    disabled={ragflowDatasetsQuery.isLoading || ragflowDatasetsQuery.isError}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue
+                        placeholder={
+                          ragflowDatasetsQuery.isLoading
+                            ? "Loading RAGFlow datasets..."
+                            : ragflowDatasetsQuery.isError
+                              ? "Failed to load datasets"
+                              : "Select a RAGFlow dataset"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(ragflowDatasetsQuery.data ?? []).map((ds) => (
+                        <SelectItem key={ds.id} value={ds.id}>
+                          {ds.name} ({ds.id})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

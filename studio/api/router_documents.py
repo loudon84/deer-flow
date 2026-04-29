@@ -11,9 +11,16 @@ from studio.models.dto import (
     RejectDocumentRequest,
     SubmitApprovalRequest,
 )
+from studio.settings.ragflow_settings import RAGFLOW_DATASETS
 from studio.services import ApprovalService
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
+
+
+@router.get("/ragflow-datasets")
+async def list_ragflow_datasets():
+    """获取可用的 RAGFlow datasets 配置（用于前端下拉选择）"""
+    return RAGFLOW_DATASETS
 
 
 def _document_to_response(document: dict) -> DocumentResponse:
@@ -183,7 +190,13 @@ async def get_ragflow_status(
     try:
         task = await service.get_ragflow_status(document_id)
         if not task:
-            raise HTTPException(status_code=200 , detail="RAGFlow task not found")
+            return RagflowStatusResponse(
+                document_id=document_id,
+                ragflow_status="not_indexed",
+                ragflow_document_id=None,
+                knowledgebase_id=None,
+                last_error="RAGFlow task not found",
+            )
         
         return RagflowStatusResponse(
             document_id=document_id,
@@ -192,8 +205,14 @@ async def get_ragflow_status(
             knowledgebase_id=str(task.get("knowledgebaseId", "")) if task.get("knowledgebaseId") else None,
             last_error=task.get("lastError"),
         )
-    except ValueError as e:
-        raise HTTPException(status_code=200 , detail=str(e))
+    except Exception as e:
+        return RagflowStatusResponse(
+            document_id=document_id,
+            ragflow_status="failed",
+            ragflow_document_id=None,
+            knowledgebase_id=None,
+            last_error=str(e),
+        )
 
 
 @router.post("/{document_id}/ragflow-retry", response_model=OkResponse)
