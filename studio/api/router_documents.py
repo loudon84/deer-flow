@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+import logging
 
 from studio.api.deps import get_approval_service
 from studio.models.dto import (
@@ -15,6 +16,7 @@ from studio.settings.ragflow_settings import RAGFLOW_DATASETS
 from studio.services import ApprovalService
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/ragflow-datasets")
@@ -88,13 +90,13 @@ async def list_documents(
     return [_document_to_response(d) for d in documents]
 
 
-@router.put("/{document_id}", response_model=OkResponse)
+@router.post("/{document_id}/update", response_model=OkResponse)
 async def update_document(
     document_id: str,
     request: DocumentUpdateRequest,
     service: ApprovalService = Depends(get_approval_service),
 ):
-    """更新文档内容"""
+    """更新文档内容（网络环境不支持 PUT，改为 POST /update）"""
     try:
         await service.update_document(
             document_id=document_id,
@@ -106,6 +108,9 @@ async def update_document(
         return OkResponse()
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("update_document failed: document_id=%s", document_id)
+        raise HTTPException(status_code=500, detail=f"update_document internal error: {e}")
 
 
 @router.post("/{document_id}/submit-approval", response_model=OkResponse)

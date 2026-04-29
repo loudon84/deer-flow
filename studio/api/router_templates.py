@@ -89,13 +89,13 @@ async def list_templates(
     return [_template_to_response(t) for t in templates]
 
 
-@router.put("/{template_id}", response_model=OkResponse)
+@router.post("/{template_id}/update", response_model=OkResponse)
 async def update_template(
     template_id: str,
     request: TemplateUpdateRequest,
     service: TemplateService = Depends(get_template_service),
 ):
-    """更新模板"""
+    """更新模板（网络环境不支持 PUT，改为 POST /update）"""
     try:
         await service.update_template(template_id, request.model_dump(exclude_none=True))
         return OkResponse()

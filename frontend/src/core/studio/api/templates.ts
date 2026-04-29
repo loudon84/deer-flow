@@ -56,8 +56,8 @@ export function updateTemplate(
   templateId: string,
   payload: Record<string, unknown>,
 ) {
-  return articleStudioClient.put<{ ok: boolean }>(
-    `/api/v1/templates/${templateId}`,
+  return articleStudioClient.post<{ ok: boolean }>(
+    `/api/v1/templates/${templateId}/update`,
     payload,
   );
 }

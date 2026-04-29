@@ -29,8 +29,8 @@ export function updateDocument(
   documentId: string,
   payload: UpdateDocumentPayload,
 ) {
-  return articleStudioClient.put<{ ok: true }>(
-    `/api/v1/documents/${documentId}`,
+  return articleStudioClient.post<{ ok: true }>(
+    `/api/v1/documents/${documentId}/update`,
     payload,
   );
 }
